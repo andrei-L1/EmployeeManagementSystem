@@ -2,6 +2,7 @@
 header("Content-Type: application/json");
 require_once '../../auth/check_login.php';
 require_once '../../config/dbcon.php';
+require_once '../../config/pusher.php';
 
 $response = ['success' => false, 'error' => ''];
 
@@ -48,6 +49,22 @@ try {
         $record['record_id'],
         $_SERVER['REMOTE_ADDR']
     ]);
+
+    // Get employee details for Pusher event
+    $stmt = $conn->prepare("SELECT e.*, u.username FROM employees e 
+                          JOIN users u ON e.user_id = u.user_id 
+                          WHERE e.employee_id = ?");
+    $stmt->execute([$employeeId]);
+    $employee = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Trigger Pusher event
+    $data = [
+        'employee_id' => $employeeId,
+        'employee_name' => $employee['first_name'] . ' ' . $employee['last_name'],
+        'time_out' => date('Y-m-d H:i:s'),
+        'total_hours' => $totalHours
+    ];
+    $pusher->trigger('attendance-channel', 'clock-out-event', $data);
 
     $response['success'] = true;
 } catch (Exception $e) {

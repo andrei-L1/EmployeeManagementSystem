@@ -87,6 +87,82 @@ if (isset($_SESSION['user_data']['employee_id'])) {
     $recentAttendance = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+// Get user's notifications
+$stmt = $conn->prepare("
+    SELECT * FROM notifications 
+    WHERE user_id = ? 
+    AND deleted_at IS NULL 
+    ORDER BY created_at DESC 
+    LIMIT 5
+");
+$stmt->execute([$_SESSION['user_data']['user_id']]);
+$notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get monthly attendance data
+$currentYear = date('Y');
+$monthlyAttendance = [];
+
+if (hasRole('Admin') || hasRole('HR')) {
+    // Admin and HR see all employees
+    $stmt = $conn->prepare("
+        SELECT 
+            MONTH(date) as month,
+            status,
+            COUNT(*) as count
+        FROM attendance_records
+        WHERE YEAR(date) = ?
+        AND deleted_at IS NULL
+        GROUP BY MONTH(date), status
+        ORDER BY month
+    ");
+    $stmt->execute([$currentYear]);
+} elseif (hasRole('Manager')) {
+    // Manager sees only their department
+    $stmt = $conn->prepare("
+        SELECT 
+            MONTH(ar.date) as month,
+            ar.status,
+            COUNT(*) as count
+        FROM attendance_records ar
+        JOIN employees e ON ar.employee_id = e.employee_id
+        WHERE YEAR(ar.date) = ?
+        AND e.department_id = ?
+        AND ar.deleted_at IS NULL
+        GROUP BY MONTH(ar.date), ar.status
+        ORDER BY month
+    ");
+    $stmt->execute([$currentYear, $_SESSION['user_data']['employee_data']['department_id']]);
+} else {
+    // Employee sees only their own attendance
+    $stmt = $conn->prepare("
+        SELECT 
+            MONTH(date) as month,
+            status,
+            COUNT(*) as count
+        FROM attendance_records
+        WHERE YEAR(date) = ?
+        AND employee_id = ?
+        AND deleted_at IS NULL
+        GROUP BY MONTH(date), status
+        ORDER BY month
+    ");
+    $stmt->execute([$currentYear, $_SESSION['user_data']['employee_id']]);
+}
+
+$results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Initialize monthly data
+$monthlyData = array_fill(1, 12, [
+    'Present' => 0,
+    'Late' => 0,
+    'Absent' => 0
+]);
+
+// Process results
+foreach ($results as $row) {
+    $monthlyData[$row['month']][$row['status']] = $row['count'];
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -98,175 +174,589 @@ if (isset($_SESSION['user_data']['employee_id'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
     <style>
         :root {
-            --primary-color: #4e73df;
-            --secondary-color: #1cc88a;
-            --success-color: #36b9cc;
-            --info-color: #f6c23e;
-            --warning-color: #e74a3b;
-            --danger-color: #858796;
-            --dark-color: #5a5c69;
-            --light-color: #f8f9fc;
+            --primary-color: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary-color: #0ea5e9;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --light-color: #f8fafc;
+            --dark-color: #1e293b;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --card-shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --transition-speed: 0.3s;
         }
-        
+
         body {
-            background-color: #f8f9fc;
-            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--gray-50);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--gray-800);
+            min-height: 100vh;
         }
-        
+
         .main-content {
-            margin-left: 14rem;
-            padding: 1.5rem;
-            width: calc(100% - 14rem);
+            padding: 2rem;
+            transition: all var(--transition-speed) ease;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
         }
-        
-        .role-badge {
-            font-size: 0.75rem;
-            padding: 0.35em 0.65em;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-        }
-        
-        .badge-admin {
-            background-color: #6f42c1;
-        }
-        
-        .badge-hr {
-            background-color: #d63384;
-        }
-        
-        .badge-manager {
-            background-color: #fd7e14;
-        }
-        
-        .badge-employee {
-            background-color: #20c997;
-        }
-        
-        .card {
-            border: none;
-            border-radius: 0.35rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1.5rem 0 rgba(58, 59, 69, 0.2);
-        }
-        
-        .card-header {
-            background-color: #f8f9fc;
-            border-bottom: 1px solid #e3e6f0;
-            padding: 1rem 1.35rem;
-            font-weight: 700;
-            color: var(--dark-color);
-        }
-        
-        .stat-card {
-            border-left: 0.25rem solid;
-            transition: all 0.3s;
-        }
-        
-        .stat-card.primary {
-            border-left-color: var(--primary-color);
-        }
-        
-        .stat-card.success {
-            border-left-color: var(--secondary-color);
-        }
-        
-        .stat-card.info {
-            border-left-color: var(--success-color);
-        }
-        
-        .stat-card.warning {
-            border-left-color: var(--info-color);
-        }
-        
-        .stat-card:hover.primary {
-            background-color: rgba(78, 115, 223, 0.05);
-        }
-        
-        .stat-card:hover.success {
-            background-color: rgba(28, 200, 138, 0.05);
-        }
-        
-        .stat-card:hover.info {
-            background-color: rgba(54, 185, 204, 0.05);
-        }
-        
-        .stat-card:hover.warning {
-            background-color: rgba(246, 194, 62, 0.05);
-        }
-        
-        .stat-icon {
-            font-size: 2rem;
-            opacity: 0.3;
-            position: absolute;
-            right: 1rem;
-            top: 1rem;
-        }
-        
-        .quick-action-btn {
-            height: 100%;
+
+        .dashboard-header {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            padding: 1.5rem 0;
-            border-radius: 0.35rem;
-            transition: all 0.3s;
         }
-        
-        .quick-action-btn i {
-            font-size: 2rem;
+
+        .welcome-section {
+            flex: 1;
+        }
+
+        .welcome-section .welcome-text {
+            display: block;
+        }
+
+        .welcome-section .date-dept {
+            display: block;
+        }
+
+        .right-section {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .last-login {
+            text-align: right;
+        }
+
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.75rem;
+            height: 100%;
+            transition: all var(--transition-speed) ease;
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow-hover);
+            border-color: var(--primary-light);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: var(--primary-color);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .stat-card:hover::before {
+            width: 10px;
+        }
+
+        .stat-card.success::before {
+            background: var(--success-color);
+        }
+
+        .stat-card.info::before {
+            background: var(--info-color);
+        }
+
+        .stat-card.warning::before {
+            background: var(--warning-color);
+        }
+
+        .stat-icon {
+            position: absolute;
+            right: 1.75rem;
+            top: 1.75rem;
+            font-size: 2.5rem;
+            opacity: 0.15;
+            color: var(--gray-600);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: scale(1.1) rotate(5deg);
+            opacity: 0.25;
+        }
+
+        .stat-value {
+            font-size: 2.25rem;
+            font-weight: 700;
             margin-bottom: 0.5rem;
+            color: var(--gray-800);
+            transition: all var(--transition-speed) ease;
+            background: linear-gradient(135deg, var(--gray-800), var(--gray-600));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        
-        .quick-action-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+
+        .stat-card:hover .stat-value {
+            transform: scale(1.05);
         }
-        
-        .attendance-table tr:last-child td {
-            border-bottom: none;
+
+        .stat-label {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--gray-500);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
         }
-        
-        .announcement-item {
-            transition: all 0.3s;
-            border-radius: 0.35rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
+
+        .stat-change {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
         }
-        
-        .announcement-item:hover {
-            background-color: #f8f9fc;
-            transform: translateX(5px);
+
+        .stat-change i {
+            transition: transform var(--transition-speed) ease;
         }
-        
-        .announcement-date {
-            font-size: 0.8rem;
+
+        .stat-card:hover .stat-change i {
+            transform: translateY(-2px);
+        }
+
+        .stat-change.positive {
+            color: var(--success-color);
+        }
+
+        .stat-change.negative {
             color: var(--danger-color);
         }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-            border: 2px solid #e3e6f0;
+
+        .card {
+            background: white;
+            border-radius: 1.5rem;
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            transition: all var(--transition-speed) ease;
+            overflow: hidden;
         }
-        
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
+
+        .card:hover {
+            box-shadow: var(--card-shadow-hover);
+            border-color: var(--primary-light);
+        }
+
+        .card-header {
+            background: none;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header h5 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--gray-800);
+            font-size: 1.1rem;
+        }
+
+        .card-header h5::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 1.5rem;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        .quick-action-btn {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            transition: all var(--transition-speed) ease;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+            font-weight: 500;
+            border: none;
+        }
+
+        .quick-action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+            transform: translateX(-100%);
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .quick-action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--card-shadow-hover);
+            color: white;
+        }
+
+        .quick-action-btn:hover::before {
+            transform: translateX(100%);
+        }
+
+        .quick-action-btn i {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .quick-action-btn:hover i {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .notification-item {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--gray-200);
+            transition: all var(--transition-speed) ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item:hover {
+            background-color: var(--gray-50);
+            transform: translateX(5px);
+        }
+
+        .notification-item.unread {
+            background-color: rgba(99, 102, 241, 0.05);
+        }
+
+        .notification-item.unread::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--primary-color);
+            border-radius: 0 2px 2px 0;
+        }
+
+        .notification-item.unread:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: var(--danger-color);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .user-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--gray-200);
+            transition: all var(--transition-speed) ease;
+            background-color: var(--gray-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            border-color: var(--primary-color);
+        }
+
+        .default-avatar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .default-avatar:hover {
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+        }
+
+        .default-avatar i {
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .default-avatar:hover i {
+            transform: scale(1.1);
+        }
+
+        .attendance-table {
+            margin: 0;
+        }
+
+        .attendance-table th {
+            font-weight: 600;
+            color: var(--gray-600);
+            border-bottom: 2px solid var(--gray-200);
+            white-space: nowrap;
+            padding: 1rem;
+            background: var(--gray-50);
+        }
+
+        .attendance-table td {
+            vertical-align: middle;
+            transition: all var(--transition-speed) ease;
+            padding: 1rem;
+        }
+
+        .attendance-table tr:hover td {
+            background-color: var(--gray-50);
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-badge::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .btn {
+            transition: all var(--transition-speed) ease;
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            border-radius: 0.5rem;
+        }
+
+        /* Loading States */
+        .loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: inherit;
+            backdrop-filter: blur(4px);
+        }
+
+        .loading::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 3px solid var(--gray-200);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes spin {
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
             }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
             .main-content {
-                margin-left: 0;
-                width: 100%;
+                padding: 1rem;
+            }
+
+            .dashboard-header {
+                padding: 1rem;
+                border-radius: 1rem;
+            }
+
+            .welcome-section {
+                display: flex;
+                align-items: center;
+            }
+
+            .welcome-section .welcome-text {
+                display: none;
+            }
+
+            .welcome-section .date-dept {
+                display: none;
+            }
+
+            .welcome-section h2 {
+                font-size: 1.25rem;
+                margin: 0;
+                white-space: nowrap;
+            }
+
+            .right-section {
+                gap: 0.75rem;
+            }
+
+            .last-login .small {
+                font-size: 0.7rem;
+                color: var(--gray-500);
+            }
+
+            .last-login .fw-bold {
+                font-size: 0.8rem;
+                color: var(--gray-700);
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dashboard-header {
+                padding: 0.75rem;
+            }
+
+            .dashboard-header .d-flex {
+                gap: 0.75rem;
+            }
+
+            .last-login .small {
+                font-size: 0.65rem;
+            }
+
+            .last-login .fw-bold {
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .main-content {
+                padding: 0.75rem;
+            }
+
+            .dashboard-header {
+                padding: 0.5rem;
+            }
+
+            .dashboard-header .d-flex {
+                gap: 0.5rem;
+            }
+
+            .last-login .small {
+                font-size: 0.6rem;
+            }
+
+            .last-login .fw-bold {
+                font-size: 0.7rem;
             }
         }
     </style>
@@ -274,246 +764,170 @@ if (isset($_SESSION['user_data']['employee_id'])) {
 <body>
     <?php include '../includes/sidebar.php'; ?>
 
-    <!-- Main Content -->
     <div class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold text-gray-800">Dashboard</h2>
-            <div class="d-flex align-items-center">
-                <div class="me-3 text-end">
-                    <small class="text-muted">Logged in as</small>
-                    <div>
-                        <strong><?= htmlspecialchars($_SESSION['user_data']['full_name'] ?? 'User') ?></strong>
-                        <?php if (isset($_SESSION['user_data']['department'])): ?>
-                        <br>
-                        <small class="text-muted"><?= $_SESSION['user_data']['department'] ?></small>
-                        <?php endif; ?>
-                    </div>
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <div class="welcome-section">
+                <span class="welcome-text">Welcome back,</span>
+                <h2 class="mb-1"><?= htmlspecialchars($_SESSION['user_data']['full_name'] ?? 'User') ?></h2>
+                <p class="text-muted mb-0 date-dept">
+                    <?= date('l, F j, Y') ?> | 
+                    <?php if (isset($_SESSION['user_data']['department'])): ?>
+                    <?= $_SESSION['user_data']['department'] ?>
+                    <?php endif; ?>
+                </p>
+            </div>
+            <div class="right-section">
+                <div class="last-login">
+                    <div class="small text-muted">Last Login</div>
+                    <div class="fw-bold"><?= date('M j, g:i A', strtotime($_SESSION['user_data']['last_login'] ?? 'now')) ?></div>
                 </div>
-                <img src="<?= $_SESSION['user_data']['employee_data']['profile_picture'] ?? 'default.jpg' ?>" 
-                     class="user-avatar rounded-circle" alt="Profile">
+                <?php if (!empty($_SESSION['user_data']['employee_data']['profile_picture'])): ?>
+                    <img src="<?= htmlspecialchars($_SESSION['user_data']['employee_data']['profile_picture']) ?>" 
+                         class="user-avatar" alt="Profile">
+                <?php else: ?>
+                    <div class="user-avatar default-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 
-        <!-- Summary Cards -->
+        <!-- Stats Cards -->
+        <?php if (hasRole('Admin') || hasRole('HR') || hasRole('Manager')): ?>
         <div class="row mb-4">
-            <?php if (hasRole('Admin') || hasRole('HR') || hasRole('Manager')): ?>
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card primary h-100">
-                    <div class="card-body position-relative">
-                        <h6 class="text-uppercase text-primary mb-2"><?= hasRole('Manager') ? 'Team Members' : 'Employees' ?></h6>
-                        <h2 class="mb-2"><?= $totalEmployees ?></h2>
-                        <p class="mb-0 text-muted">
-                            <span class="text-success me-2">
-                                <i class="fas fa-arrow-up"></i> 3.2%
-                            </span>
-                            <span>Since last month</span>
-                        </p>
-                        <i class="fas fa-users stat-icon text-primary"></i>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label"><?= hasRole('Manager') ? 'Team Members' : 'Total Employees' ?></div>
+                    <div class="stat-value"><?= $totalEmployees ?></div>
+                    <div class="stat-change positive">
+                        <i class="fas fa-arrow-up"></i> 3.2% from last month
                     </div>
+                    <i class="fas fa-users stat-icon"></i>
                 </div>
             </div>
             
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card success h-100">
-                    <div class="card-body position-relative">
-                        <h6 class="text-uppercase text-success mb-2">Active <?= hasRole('Manager') ? 'Team' : '' ?></h6>
-                        <h2 class="mb-2"><?= $activeEmployees ?></h2>
-                        <p class="mb-0 text-muted">
-                            <span class="text-success me-2">
-                                <i class="fas fa-arrow-up"></i> 1.1%
-                            </span>
-                            <span>Since last month</span>
-                        </p>
-                        <i class="fas fa-user-check stat-icon text-success"></i>
+            <div class="col-md-3">
+                <div class="stat-card success">
+                    <div class="stat-label">Active <?= hasRole('Manager') ? 'Team' : 'Employees' ?></div>
+                    <div class="stat-value"><?= $activeEmployees ?></div>
+                    <div class="stat-change positive">
+                        <i class="fas fa-arrow-up"></i> 1.1% from last month
                     </div>
+                    <i class="fas fa-user-check stat-icon"></i>
                 </div>
             </div>
             
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card info h-100">
-                    <div class="card-body position-relative">
-                        <h6 class="text-uppercase text-info mb-2">Present Today</h6>
-                        <h2 class="mb-2"><?= $presentToday ?></h2>
-                        <p class="mb-0 text-muted">
-                            <span class="text-danger me-2">
-                                <i class="fas fa-arrow-down"></i> 0.5%
-                            </span>
-                            <span>Since yesterday</span>
-                        </p>
-                        <i class="fas fa-clipboard-check stat-icon text-info"></i>
+            <div class="col-md-3">
+                <div class="stat-card info">
+                    <div class="stat-label">Present Today</div>
+                    <div class="stat-value"><?= $presentToday ?></div>
+                    <div class="stat-change negative">
+                        <i class="fas fa-arrow-down"></i> 0.5% from yesterday
                     </div>
+                    <i class="fas fa-clipboard-check stat-icon"></i>
                 </div>
             </div>
             
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card warning h-100">
-                    <div class="card-body position-relative">
-                        <h6 class="text-uppercase text-warning mb-2">Pending Leaves</h6>
-                        <h2 class="mb-2"><?= $pendingLeaves ?></h2>
-                        <p class="mb-0 text-muted">
-                            <span class="text-success me-2">
-                                <i class="fas fa-arrow-up"></i> 2.4%
-                            </span>
-                            <span>Since last week</span>
-                        </p>
-                        <i class="fas fa-calendar-times stat-icon text-warning"></i>
+            <div class="col-md-3">
+                <div class="stat-card warning">
+                    <div class="stat-label">Pending Leaves</div>
+                    <div class="stat-value"><?= $pendingLeaves ?></div>
+                    <div class="stat-change positive">
+                        <i class="fas fa-arrow-up"></i> 2.4% from last week
                     </div>
+                    <i class="fas fa-calendar-times stat-icon"></i>
                 </div>
             </div>
-            <?php endif; ?>
-            
-            <?php if (hasRole('Admin')): ?>
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card h-100" style="border-left-color: #6f42c1;">
-                    <div class="card-body position-relative">
-                        <h6 class="text-uppercase mb-2" style="color: #6f42c1;">Departments</h6>
-                        <h2 class="mb-2"><?= $totalDepartments ?></h2>
-                        <p class="mb-0 text-muted">
-                            <span class="text-success me-2">
-                                <i class="fas fa-arrow-up"></i> 0.0%
-                            </span>
-                            <span>Since last month</span>
-                        </p>
-                        <i class="fas fa-building stat-icon" style="color: #6f42c1;"></i>
-                    </div>
-                </div>
-            </div>
-            <?php endif; ?>
         </div>
+        <?php endif; ?>
 
         <div class="row">
-            <!-- First Column -->
+            <!-- Main Content Area -->
             <div class="col-lg-8">
-                <div class="row">
-                    <!-- Role-Specific Content -->
-                    <?php if (hasRole('Admin')): ?>
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">System Overview</h5>
-                                <a href="admin/audit-logs.php" class="btn btn-sm btn-outline-primary">View All</a>
-                            </div>
-                            <div class="card-body">
-                                <div class="list-group list-group-flush">
-                                    <a href="admin/audit-logs.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-history me-2 text-primary"></i> Audit Logs</span>
-                                        <span class="badge bg-primary rounded-pill">14 new</span>
-                                    </a>
-                                    <a href="admin/user-management.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-user-cog me-2 text-success"></i> User Management</span>
-                                        <span class="badge bg-success rounded-pill">3 pending</span>
-                                    </a>
-                                    <a href="admin/database-backup.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-database me-2 text-info"></i> Database Backup</span>
-                                        <span class="text-muted">Last: 2 days ago</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Role-Specific Content -->
+                <?php if (hasRole('Admin')): ?>
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">System Overview</h5>
+                        <a href="admin/audit-logs.php" class="btn btn-sm btn-primary">View All</a>
                     </div>
-                    <?php endif; ?>
-                    
-                    <?php if (hasRole('HR')): ?>
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">HR Tasks</h5>
-                                <a href="hr/tasks.php" class="btn btn-sm btn-outline-primary">View All</a>
-                            </div>
-                            <div class="card-body">
-                                <div class="list-group list-group-flush">
-                                    <a href="hr/onboarding.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-user-plus me-2 text-primary"></i> New Onboarding</span>
-                                        <span class="badge bg-primary rounded-pill">2 pending</span>
-                                    </a>
-                                    <a href="hr/performance-reviews.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-chart-line me-2 text-success"></i> Performance Reviews</span>
-                                        <span class="badge bg-success rounded-pill">5 due</span>
-                                    </a>
-                                    <a href="hr/benefits.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-heart me-2 text-info"></i> Benefits Updates</span>
-                                        <span class="text-muted">1 update</span>
-                                    </a>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <a href="admin/audit-logs.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-history text-primary me-2"></i>
+                                    <span>Audit Logs</span>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <?php if (hasRole('Manager')): ?>
-                    <div class="col-md-6 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Team Management</h5>
-                                <a href="manager/team.php" class="btn btn-sm btn-outline-primary">View All</a>
-                            </div>
-                            <div class="card-body">
-                                <div class="list-group list-group-flush">
-                                    <a href="manager/team-performance.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-chart-pie me-2 text-primary"></i> Team Performance</span>
-                                        <span class="text-muted">Updated today</span>
-                                    </a>
-                                    <a href="manager/schedule.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-calendar-alt me-2 text-success"></i> Schedule</span>
-                                        <span class="badge bg-success rounded-pill">3 conflicts</span>
-                                    </a>
-                                    <a href="manager/leave-approvals.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                        <span><i class="fas fa-check-circle me-2 text-info"></i> Leave Approvals</span>
-                                        <span class="badge bg-info rounded-pill"><?= $pendingLeaves ?> pending</span>
-                                    </a>
+                                <span class="badge bg-primary rounded-pill">14 new</span>
+                            </a>
+                            <a href="admin/user-management.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-user-cog text-success me-2"></i>
+                                    <span>User Management</span>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-                    
-                    <!-- Attendance Chart -->
-                    <div class="col-md-12 mb-4">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="mb-0">Monthly Attendance Overview</h5>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="attendanceChart" height="250"></canvas>
-                            </div>
+                                <span class="badge bg-success rounded-pill">3 pending</span>
+                            </a>
+                            <a href="admin/database-backup.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-database text-info me-2"></i>
+                                    <span>Database Backup</span>
+                                </div>
+                                <span class="text-muted">Last: 2 days ago</span>
+                            </a>
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
+
+                <!-- Attendance Chart -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Monthly Attendance Overview</h5>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-primary active">2025</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary">2024</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="attendanceChart" height="300"></canvas>
+                    </div>
+                </div>
             </div>
-            
-            <!-- Second Column -->
+
+            <!-- Sidebar Content -->
             <div class="col-lg-4">
-                <!-- Recent Attendance (for employees) -->
+                <!-- Recent Attendance -->
                 <?php if (isset($_SESSION['user_data']['employee_id'])): ?>
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Your Recent Attendance</h5>
-                        <a href="attendance/record.php" class="btn btn-sm btn-outline-primary">View All</a>
+                        <a href="attendance/record.php" class="btn btn-sm btn-primary">View All</a>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0 attendance-table">
-                                <thead class="bg-light">
+                                <thead>
                                     <tr>
-                                        <th class="border-0">Date</th>
-                                        <th class="border-0">Time In</th>
-                                        <th class="border-0">Time Out</th>
-                                        <th class="border-0">Status</th>
+                                        <th>Date</th>
+                                        <th>Time In</th>
+                                        <th>Time Out</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($recentAttendance as $record): ?>
                                     <tr>
-                                        <td><?= htmlspecialchars(date('M j', strtotime($record['date']))) ?></td>
+                                        <td><?= date('M j', strtotime($record['date'])) ?></td>
                                         <td><?= $record['time_in'] ? date('H:i', strtotime($record['time_in'])) : '-' ?></td>
                                         <td><?= $record['time_out'] ? date('H:i', strtotime($record['time_out'])) : '-' ?></td>
                                         <td>
-                                            <span class="badge bg-<?= 
+                                            <span class="status-badge bg-<?= 
                                                 $record['status'] === 'Present' ? 'success' : 
                                                 ($record['status'] === 'Late' ? 'warning' : 
                                                 ($record['status'] === 'On Leave' ? 'info' : 'danger')) 
-                                            ?> rounded-pill">
-                                                <?= htmlspecialchars($record['status']) ?>
+                                            ?>">
+                                                <?= $record['status'] ?>
                                             </span>
                                         </td>
                                     </tr>
@@ -524,82 +938,89 @@ if (isset($_SESSION['user_data']['employee_id'])) {
                     </div>
                 </div>
                 <?php endif; ?>
-                
+
                 <!-- Quick Actions -->
                 <div class="card mb-4">
                     <div class="card-header">
                         <h5 class="mb-0">Quick Actions</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row g-3">
-                            <?php if (isset($_SESSION['user_data']['employee_id'])): ?>
-                            <div class="col-6">
-                                <a href="attendance/record.php" class="btn btn-primary quick-action-btn text-white">
-                                    <i class="fas fa-fingerprint"></i>
-                                    <span>Clock In/Out</span>
-                                </a>
-                            </div>
-                            <div class="col-6">
-                                <a href="leave/request.php" class="btn btn-success quick-action-btn text-white">
-                                    <i class="fas fa-calendar-plus"></i>
-                                    <span>Request Leave</span>
-                                </a>
-                            </div>
+                        <?php if (isset($_SESSION['user_data']['employee_id'])): ?>
+                        <a href="attendance/record.php" class="quick-action-btn bg-primary">
+                            <i class="fas fa-fingerprint"></i>
+                            <span>Clock In/Out</span>
+                        </a>
+                        <a href="leave/request.php" class="quick-action-btn bg-success">
+                            <i class="fas fa-calendar-plus"></i>
+                            <span>Request Leave</span>
+                        </a>
+                        <?php endif; ?>
+
+                        <?php if (hasRole('Admin') || hasRole('HR')): ?>
+                        <a href="employees/add.php" class="quick-action-btn bg-info">
+                            <i class="fas fa-user-plus"></i>
+                            <span>Add Employee</span>
+                        </a>
+                        <a href="payroll/process.php" class="quick-action-btn bg-warning">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>Process Payroll</span>
+                        </a>
+                        <?php endif; ?>
+
+                        <?php if (hasRole('HR') || hasRole('Manager')): ?>
+                        <a href="leave/approvals.php" class="quick-action-btn bg-info position-relative">
+                            <i class="fas fa-calendar-check"></i>
+                            <span>Leave Approvals</span>
+                            <?php if ($pendingLeaves > 0): ?>
+                            <span class="notification-badge bg-danger"><?= $pendingLeaves ?></span>
                             <?php endif; ?>
-                            
-                            <?php if (hasRole('Admin') || hasRole('HR')): ?>
-                            <div class="col-6">
-                                <a href="employees/add.php" class="btn btn-info quick-action-btn text-white">
-                                    <i class="fas fa-user-plus"></i>
-                                    <span>Add Employee</span>
-                                </a>
-                            </div>
-                            <?php endif; ?>
-                            
-                            <?php if (hasRole('Admin') || hasRole('HR')): ?>
-                            <div class="col-6">
-                                <a href="payroll/process.php" class="btn btn-warning quick-action-btn text-white">
-                                    <i class="fas fa-money-bill-wave"></i>
-                                    <span>Process Payroll</span>
-                                </a>
-                            </div>
-                            <?php endif; ?>
-                            
-                            <?php if (hasRole('Admin')): ?>
-                            <div class="col-6">
-                                <a href="admin/settings.php" class="btn btn-dark quick-action-btn text-white">
-                                    <i class="fas fa-cogs"></i>
-                                    <span>System Settings</span>
-                                </a>
-                            </div>
-                            <div class="col-6">
-                                <a href="admin/reports.php" class="btn btn-secondary quick-action-btn text-white">
-                                    <i class="fas fa-chart-bar"></i>
-                                    <span>Generate Reports</span>
-                                </a>
-                            </div>
-                            <?php endif; ?>
-                        </div>
+                        </a>
+                        <?php endif; ?>
+
+                        <?php if (hasRole('Admin')): ?>
+                        <a href="admin/settings.php" class="quick-action-btn bg-dark">
+                            <i class="fas fa-cogs"></i>
+                            <span>System Settings</span>
+                        </a>
+                        <a href="admin/reports.php" class="quick-action-btn bg-secondary">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Generate Reports</span>
+                        </a>
+                        <?php endif; ?>
                     </div>
                 </div>
-                
-                <!-- Announcements -->
+
+                <!-- Notifications -->
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Announcements</h5>
-                        <a href="announcements.php" class="btn btn-sm btn-outline-secondary">View All</a>
+                        <h5 class="mb-0">Notifications</h5>
+                        <button class="btn btn-sm btn-primary" id="markAllRead">Mark All as Read</button>
                     </div>
-                    <div class="card-body">
-                        <?php foreach ($recentAnnouncements as $announcement): ?>
-                        <div class="announcement-item">
-                            <h6 class="mb-1"><?= htmlspecialchars($announcement['title']) ?></h6>
-                            <small class="announcement-date">
-                                <i class="far fa-clock me-1"></i>
-                                <?= date('M j, Y', strtotime($announcement['created_at'])) ?>
-                            </small>
-                            <p class="mt-2 mb-0 text-muted"><?= htmlspecialchars(substr($announcement['content'], 0, 100)) ?>...</p>
+                    <div class="card-body p-0">
+                        <?php if (empty($notifications)): ?>
+                        <div class="text-center py-4">
+                            <i class="fas fa-bell-slash text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-0">No new notifications</p>
                         </div>
-                        <?php endforeach; ?>
+                        <?php else: ?>
+                        <div class="list-group list-group-flush">
+                            <?php foreach ($notifications as $notification): ?>
+                            <div class="notification-item <?= $notification['is_read'] ? '' : 'unread' ?>" 
+                                 data-id="<?= $notification['notification_id'] ?>">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1"><?= htmlspecialchars($notification['title']) ?></h6>
+                                    <small class="text-muted">
+                                        <?= date('M j, g:i A', strtotime($notification['created_at'])) ?>
+                                    </small>
+                                </div>
+                                <p class="mb-1"><?= htmlspecialchars($notification['message']) ?></p>
+                                <?php if (!$notification['is_read']): ?>
+                                <small class="text-primary">New</small>
+                                <?php endif; ?>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -608,6 +1029,7 @@ if (isset($_SESSION['user_data']['employee_id'])) {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <script>
         // Attendance Chart
         const ctx = document.getElementById('attendanceChart').getContext('2d');
@@ -617,21 +1039,21 @@ if (isset($_SESSION['user_data']['employee_id'])) {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 datasets: [{
                     label: 'Present',
-                    data: [85, 78, 92, 88, 95, 87, 90, 82, 89, 93, 91, 86],
-                    backgroundColor: 'rgba(78, 115, 223, 0.7)',
-                    borderColor: 'rgba(78, 115, 223, 1)',
+                    data: <?= json_encode(array_column($monthlyData, 'Present')) ?>,
+                    backgroundColor: 'rgba(67, 97, 238, 0.7)',
+                    borderColor: 'rgba(67, 97, 238, 1)',
                     borderWidth: 1
                 }, {
                     label: 'Late',
-                    data: [5, 7, 3, 6, 2, 8, 4, 9, 5, 3, 4, 7],
-                    backgroundColor: 'rgba(246, 194, 62, 0.7)',
-                    borderColor: 'rgba(246, 194, 62, 1)',
+                    data: <?= json_encode(array_column($monthlyData, 'Late')) ?>,
+                    backgroundColor: 'rgba(247, 37, 133, 0.7)',
+                    borderColor: 'rgba(247, 37, 133, 1)',
                     borderWidth: 1
                 }, {
                     label: 'Absent',
-                    data: [10, 15, 5, 6, 3, 5, 6, 9, 6, 4, 5, 7],
-                    backgroundColor: 'rgba(231, 74, 59, 0.7)',
-                    borderColor: 'rgba(231, 74, 59, 1)',
+                    data: <?= json_encode(array_column($monthlyData, 'Absent')) ?>,
+                    backgroundColor: 'rgba(230, 57, 70, 0.7)',
+                    borderColor: 'rgba(230, 57, 70, 1)',
                     borderWidth: 1
                 }]
             },
@@ -642,9 +1064,7 @@ if (isset($_SESSION['user_data']['employee_id'])) {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            callback: function(value) {
-                                return value + '%';
-                            }
+                            precision: 0
                         }
                     }
                 },
@@ -655,7 +1075,7 @@ if (isset($_SESSION['user_data']['employee_id'])) {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return context.dataset.label + ': ' + context.raw + '%';
+                                return context.dataset.label + ': ' + context.raw;
                             }
                         }
                     }
@@ -663,16 +1083,87 @@ if (isset($_SESSION['user_data']['employee_id'])) {
             }
         });
 
-        // Role-specific JavaScript can be added here
-        <?php if (hasRole('Admin')): ?>
-        console.log("Admin dashboard loaded");
-        <?php elseif (hasRole('HR')): ?>
-        console.log("HR dashboard loaded");
-        <?php elseif (hasRole('Manager')): ?>
-        console.log("Manager dashboard loaded");
-        <?php else: ?>
-        console.log("Employee dashboard loaded");
-        <?php endif; ?>
+        // Handle notification clicks
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', async () => {
+                const notificationId = item.dataset.id;
+                try {
+                    const response = await fetch('../../api/notifications/mark-read.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': '<?php echo $_SESSION['csrf_token']; ?>'
+                        },
+                        body: JSON.stringify({ notification_id: notificationId })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        item.classList.remove('unread');
+                        item.querySelector('small.text-primary')?.remove();
+                        
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Notification marked as read',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: 'Failed to mark notification as read',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            });
+        });
+
+        // Handle mark all as read
+        document.getElementById('markAllRead').addEventListener('click', async () => {
+            try {
+                const response = await fetch('../../api/notifications/mark-all-read.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': '<?php echo $_SESSION['csrf_token']; ?>'
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    document.querySelectorAll('.notification-item.unread').forEach(item => {
+                        item.classList.remove('unread');
+                        item.querySelector('small.text-primary')?.remove();
+                    });
+                    
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'All notifications marked as read',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Failed to mark all notifications as read',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }
+        });
     </script>
 </body>
 </html>

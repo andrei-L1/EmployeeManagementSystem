@@ -152,7 +152,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Fetch roles, positions, departments for selects (for both GET and POST)
 $roles = $conn->query("SELECT role_id, role_name FROM roles")->fetchAll(PDO::FETCH_ASSOC);
 $positions = $conn->query("SELECT position_id, position_name FROM positions")->fetchAll(PDO::FETCH_ASSOC);
 $departments = $conn->query("SELECT department_id, department_name FROM departments")->fetchAll(PDO::FETCH_ASSOC);
@@ -188,55 +187,71 @@ function isInvalidClass($errors, $key) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Registration</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root {
-            --primary-blue: #3498db;
-            --secondary-blue: #34495e;
-            --accent-blue: #3498db;
-            --light-gray: #ecf0f1;
-            --dark-gray: #7f8c8d;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
         .registration-container {
-            max-width: 600px;
-            width: 100%;
-            background: white;
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
         
         .card-header {
-            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            background-color: #4e73df;
             color: white;
-            padding: 1rem;
-            text-align: center;
-            border-bottom: none;
-        }
-        
-        .card-header h3 {
-            font-size: 1.25rem;
-            margin: 0;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
         }
         
         .card-body {
-            padding: 1.5rem;
+            padding: 25px;
+            background-color: white;
+            border-radius: 0 0 8px 8px;
+        }
+        
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: relative;
+        }
+        
+        .step.active {
+            background-color: #4e73df;
+            color: white;
+        }
+        
+        .step.completed {
+            background-color: #1cc88a;
+            color: white;
+        }
+        
+        .step-line {
+            height: 2px;
+            width: 100px;
+            background-color: #e9ecef;
+        }
+        
+        .step-line.completed {
+            background-color: #1cc88a;
         }
         
         .form-section {
             display: none;
-            padding: 1rem 0;
         }
         
         .form-section.active {
@@ -244,98 +259,34 @@ function isInvalidClass($errors, $key) {
         }
         
         .section-title {
-            color: var(--primary-blue);
-            font-weight: 600;
-            margin-bottom: 1rem;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-        }
-        
-        .section-title i {
-            margin-right: 8px;
-            font-size: 0.9rem;
+            color: #4e73df;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
         }
         
         .required-field::after {
             content: " *";
-            color: #e74c3c;
-            font-size: 0.8rem;
-        }
-        
-        .form-control, .form-select {
-            padding: 0.5rem 0.75rem;
-            font-size: 0.9rem;
-            margin-bottom: 0.75rem;
-        }
-        
-        .input-group-text {
-            padding: 0.5rem 0.75rem;
-            font-size: 0.9rem;
-        }
-        
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-            gap: 10px;
-        }
-        
-        .step {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background-color: #ddd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 0.9rem;
-            position: relative;
-        }
-        
-        .step.active {
-            background-color: var(--primary-blue);
-            color: white;
-        }
-        
-        .step.completed {
-            background-color: #2ecc71;
-            color: white;
-        }
-        
-        .step-line {
-            flex: 1;
-            height: 2px;
-            background-color: #ddd;
-            margin: 0 5px;
-            align-self: center;
-        }
-        
-        .step-line.completed {
-            background-color: #2ecc71;
+            color: red;
         }
         
         .navigation-buttons {
             display: flex;
             justify-content: space-between;
-            margin-top: 1.5rem;
-        }
-        
-        .btn {
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-        }
-        
-        .btn-primary {
-            background-color: var(--primary-blue);
-            border-color: var(--primary-blue);
+            margin-top: 30px;
         }
         
         .invalid-feedback {
-            font-size: 0.75rem;
-            margin-top: -0.5rem;
-            margin-bottom: 0.5rem;
+            display: none;
+            color: #dc3545;
+        }
+        
+        .is-invalid {
+            border-color: #dc3545;
+        }
+        
+        .is-invalid ~ .invalid-feedback {
+            display: block;
         }
     </style>
 </head>
@@ -346,7 +297,6 @@ function isInvalidClass($errors, $key) {
         </div>
         
         <div class="card-body">
-            <!-- Step Indicator -->
             <div class="step-indicator">
                 <div class="step active" id="step1-indicator">1</div>
                 <div class="step-line" id="line1-2"></div>
@@ -356,7 +306,6 @@ function isInvalidClass($errors, $key) {
             </div>
 
             <form action="" method="POST" novalidate class="needs-validation" id="employeeForm">
-                
                 <!-- Step 1: Account Information -->
                 <div class="form-section active" id="step1">
                     <h4 class="section-title">
@@ -367,9 +316,12 @@ function isInvalidClass($errors, $key) {
                         <label for="username" class="form-label required-field">Username</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-user-tie"></i></span>
-                            <input type="text" name="username" id="username" class="form-control" required>
+                            <input type="text" name="username" id="username" class="form-control" required 
+                                   minlength="4" maxlength="20" pattern="[a-zA-Z0-9]+">
                         </div>
-                        <div class="invalid-feedback">Please enter a username</div>
+                        <div class="invalid-feedback username-error">
+                            Username must be 4-20 alphanumeric characters
+                        </div>
                     </div>
                     
                     <div class="mb-3">
@@ -378,18 +330,24 @@ function isInvalidClass($errors, $key) {
                             <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                             <input type="email" name="email" id="email" class="form-control" required>
                         </div>
-                        <div class="invalid-feedback">Please enter a valid email</div>
+                        <div class="invalid-feedback email-error">
+                            Please enter a valid email address
+                        </div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="password" class="form-label required-field">Password</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-key"></i></span>
-                            <input type="password" name="password" id="password" class="form-control" required>
+                            <input type="password" name="password" id="password" class="form-control" required
+                                   minlength="8" pattern="^(?=.*[A-Za-z])(?=.*\d).+$">
                         </div>
-                        <div class="invalid-feedback">Password must be at least 8 characters</div>
+                        <div class="invalid-feedback password-error">
+                            Password must be at least 8 characters with at least one letter and one number
+                        </div>
                     </div>
-                       <div class="mb-3">
+                    
+                                       <div class="mb-3">
                             <label class="form-label">Role *</label>
                             <select name="role_id" class="form-select <?= isInvalidClass($errors, 'role_id') ?>">
                                 <option value="">Select Role</option>
@@ -399,8 +357,10 @@ function isInvalidClass($errors, $key) {
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <div class="invalid-feedback"><?= errorText($errors, 'role_id') ?></div>
+                            <div class="invalid-feedback"><?= errorText($errors, 'role_id') ?>
                         </div>
+                    </div>
+                    
                     <div class="navigation-buttons">
                         <button type="button" class="btn btn-outline-secondary" disabled>
                             <i class="fas fa-arrow-left me-1"></i> Previous
@@ -420,14 +380,20 @@ function isInvalidClass($errors, $key) {
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="first_name" class="form-label required-field">First Name</label>
-                            <input type="text" name="first_name" id="first_name" class="form-control" required>
-                            <div class="invalid-feedback">Please enter first name</div>
+                            <input type="text" name="first_name" id="first_name" class="form-control" required
+                                   minlength="2" maxlength="50" pattern="[A-Za-z\s]+">
+                            <div class="invalid-feedback firstname-error">
+                                First name must be 2-50 letters only
+                            </div>
                         </div>
                         
                         <div class="col-md-6 mb-3">
                             <label for="last_name" class="form-label required-field">Last Name</label>
-                            <input type="text" name="last_name" id="last_name" class="form-control" required>
-                            <div class="invalid-feedback">Please enter last name</div>
+                            <input type="text" name="last_name" id="last_name" class="form-control" required
+                                   minlength="2" maxlength="50" pattern="[A-Za-z\s]+">
+                            <div class="invalid-feedback lastname-error">
+                                Last name must be 2-50 letters only
+                            </div>
                         </div>
                     </div>
                     
@@ -439,12 +405,21 @@ function isInvalidClass($errors, $key) {
                             <option value="Female">Female</option>
                             <option value="Other">Other</option>
                         </select>
-                        <div class="invalid-feedback">Please select gender</div>
+                        <div class="invalid-feedback gender-error">
+                            Please select gender
+                        </div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="contact_number" class="form-label">Phone Number</label>
-                        <input type="text" name="contact_number" id="contact_number" class="form-control">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            <input type="tel" name="contact_number" id="contact_number" class="form-control"
+                                   pattern="[0-9]{10,15}">
+                        </div>
+                        <div class="invalid-feedback phone-error">
+                            Please enter a valid phone number (10-15 digits)
+                        </div>
                     </div>
                     
                     <div class="navigation-buttons">
@@ -463,7 +438,7 @@ function isInvalidClass($errors, $key) {
                         <i class="fas fa-briefcase"></i>Employment Information
                     </h4>
                     
-                                          <div class="mb-3">
+                                                 <div class="mb-3">
                             <label class="form-label">Position *</label>
                             <select name="position_id" class="form-select <?= isInvalidClass($errors, 'position_id') ?>">
                                 <option value="">Select Position</option>
@@ -474,10 +449,9 @@ function isInvalidClass($errors, $key) {
                                 <?php endforeach; ?>
                             </select>
                             <div class="invalid-feedback"><?= errorText($errors, 'position_id') ?></div>
-                        </div>
-
+                    </div>
                     
-                     <div class="mb-3">
+                    <div class="mb-3">
                             <label class="form-label">Department *</label>
                             <select name="department_id" class="form-select <?= isInvalidClass($errors, 'department_id') ?>">
                                 <option value="">Select Department</option>
@@ -487,20 +461,25 @@ function isInvalidClass($errors, $key) {
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <div class="invalid-feedback"><?= errorText($errors, 'department_id') ?></div>
+                            <div class="invalid-feedback"><?= errorText($errors, 'department_id') ?>
                         </div>
+                    
+                    </div>
                     
                     <div class="mb-3">
                         <label for="hire_date" class="form-label required-field">Hire Date</label>
-                        <input type="date" name="hire_date" id="hire_date" class="form-control" required>
-                        <div class="invalid-feedback">Please select hire date</div>
+                        <input type="date" name="hire_date" id="hire_date" class="form-control" required
+                               max="<?= date('Y-m-d') ?>">
+                        <div class="invalid-feedback hiredate-error">
+                            Please select a valid hire date (cannot be in the future)
+                        </div>
                     </div>
                     
                     <div class="navigation-buttons">
                         <button type="button" class="btn btn-outline-secondary" onclick="prevStep(3, 2)">
                             <i class="fas fa-arrow-left me-1"></i> Previous
                         </button>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-success">
                             <i class="fas fa-user-plus me-1"></i> Register
                         </button>
                     </div>
@@ -509,7 +488,9 @@ function isInvalidClass($errors, $key) {
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Function to move to next step with validation
         function nextStep(currentStep, nextStep) {
             if (validateStep(currentStep)) {
                 // Hide current step
@@ -527,6 +508,7 @@ function isInvalidClass($errors, $key) {
             }
         }
         
+        // Function to move to previous step
         function prevStep(currentStep, prevStep) {
             // Hide current step
             document.getElementById(`step${currentStep}`).classList.remove('active');
@@ -535,50 +517,165 @@ function isInvalidClass($errors, $key) {
             // Show previous step
             document.getElementById(`step${prevStep}`).classList.add('active');
             document.getElementById(`step${prevStep}-indicator`).classList.add('active');
-            
-            // Unmark completion status
-            document.getElementById(`step${currentStep}-indicator`).classList.remove('completed');
-            if (currentStep === 2) document.getElementById('line1-2').classList.remove('completed');
-            if (currentStep === 3) document.getElementById('line2-3').classList.remove('completed');
         }
         
+        // Function to validate current step before proceeding
         function validateStep(step) {
             let isValid = true;
             const currentStep = document.getElementById(`step${step}`);
-            const requiredFields = currentStep.querySelectorAll('[required]');
+            const fields = currentStep.querySelectorAll('input, select, textarea');
             
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
+            fields.forEach(field => {
+                // Reset previous error states
+                field.classList.remove('is-invalid');
+                const errorElement = field.closest('.mb-3').querySelector('.invalid-feedback');
+                
+                // Skip validation for non-required empty fields
+                if (!field.required && field.value.trim() === '') {
+                    errorElement.style.display = 'none';
+                    return;
+                }
+                
+                // Validate required fields
+                if (field.required && !field.value.trim()) {
                     field.classList.add('is-invalid');
+                    errorElement.style.display = 'block';
+                    isValid = false;
+                    return;
+                }
+                
+                // Field-specific validation
+                let fieldValid = true;
+                let errorMessage = '';
+                
+                if (field.id === 'username') {
+                    fieldValid = /^[a-zA-Z0-9]{4,20}$/.test(field.value);
+                    errorMessage = 'Username must be 4-20 alphanumeric characters';
+                }
+                
+                if (field.id === 'email') {
+                    fieldValid = /^\S+@\S+\.\S+$/.test(field.value);
+                    errorMessage = 'Please enter a valid email address';
+                }
+                
+                if (field.id === 'password') {
+                    fieldValid = field.value.length >= 8 && /[A-Za-z]/.test(field.value) && /\d/.test(field.value);
+                    errorMessage = 'Password must be at least 8 characters with at least one letter and one number';
+                }
+                
+                if (field.id === 'first_name' || field.id === 'last_name') {
+                    fieldValid = /^[A-Za-z\s]{2,50}$/.test(field.value);
+                    errorMessage = `${field.id.replace('_', ' ')} must be 2-50 letters only`;
+                }
+                
+                if (field.id === 'contact_number' && field.value.trim() !== '') {
+                    fieldValid = /^[0-9]{10,15}$/.test(field.value);
+                    errorMessage = 'Phone number must be 10-15 digits';
+                }
+                
+                if (field.id === 'hire_date') {
+                    const today = new Date();
+                    const hireDate = new Date(field.value);
+                    fieldValid = hireDate <= today;
+                    errorMessage = 'Hire date cannot be in the future';
+                }
+                
+                if (!fieldValid) {
+                    field.classList.add('is-invalid');
+                    errorElement.textContent = errorMessage;
+                    errorElement.style.display = 'block';
                     isValid = false;
                 } else {
-                    field.classList.remove('is-invalid');
-                    
-                    // Additional validation for specific fields
-                    if (field.id === 'email' && !/^\S+@\S+\.\S+$/.test(field.value)) {
-                        field.classList.add('is-invalid');
-                        field.nextElementSibling.textContent = 'Please enter a valid email';
-                        isValid = false;
-                    }
-                    
-                    if (field.id === 'password' && field.value.length < 8) {
-                        field.classList.add('is-invalid');
-                        field.nextElementSibling.textContent = 'Password must be at least 8 characters';
-                        isValid = false;
-                    }
+                    errorElement.style.display = 'none';
                 }
             });
             
+            if (!isValid) {
+                // Scroll to the first invalid field
+                const firstInvalid = currentStep.querySelector('.is-invalid');
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+            
             return isValid;
         }
-        
-        // Real-time validation
-        document.getElementById('email').addEventListener('input', function() {
-            this.classList.toggle('is-invalid', !/^\S+@\S+\.\S+$/.test(this.value));
+
+        // Real-time validation for all fields
+        document.getElementById('username').addEventListener('input', function() {
+            const isValid = /^[a-zA-Z0-9]{4,20}$/.test(this.value);
+            const errorElement = this.closest('.mb-3').querySelector('.invalid-feedback');
+            
+            this.classList.toggle('is-invalid', !isValid);
+            errorElement.style.display = isValid ? 'none' : 'block';
         });
-        
+
+        document.getElementById('email').addEventListener('input', function() {
+            const isValid = /^\S+@\S+\.\S+$/.test(this.value);
+            const errorElement = this.closest('.mb-3').querySelector('.invalid-feedback');
+            
+            this.classList.toggle('is-invalid', !isValid);
+            errorElement.style.display = isValid ? 'none' : 'block';
+        });
+
         document.getElementById('password').addEventListener('input', function() {
-            this.classList.toggle('is-invalid', this.value.length < 8);
+            const isValid = this.value.length >= 8 && /[A-Za-z]/.test(this.value) && /\d/.test(this.value);
+            const errorElement = this.closest('.mb-3').querySelector('.invalid-feedback');
+            
+            this.classList.toggle('is-invalid', !isValid);
+            errorElement.style.display = isValid ? 'none' : 'block';
+        });
+
+        document.getElementById('first_name').addEventListener('input', function() {
+            const isValid = /^[A-Za-z\s]{2,50}$/.test(this.value);
+            const errorElement = this.closest('.mb-3').querySelector('.invalid-feedback');
+            
+            this.classList.toggle('is-invalid', !isValid);
+            errorElement.style.display = isValid ? 'none' : 'block';
+        });
+
+        document.getElementById('last_name').addEventListener('input', function() {
+            const isValid = /^[A-Za-z\s]{2,50}$/.test(this.value);
+            const errorElement = this.closest('.mb-3').querySelector('.invalid-feedback');
+            
+            this.classList.toggle('is-invalid', !isValid);
+            errorElement.style.display = isValid ? 'none' : 'block';
+        });
+
+        document.getElementById('contact_number').addEventListener('input', function() {
+            if (this.value.trim() === '') {
+                this.classList.remove('is-invalid');
+                this.closest('.mb-3').querySelector('.invalid-feedback').style.display = 'none';
+            } else {
+                const isValid = /^[0-9]{10,15}$/.test(this.value);
+                const errorElement = this.closest('.mb-3').querySelector('.invalid-feedback');
+                
+                this.classList.toggle('is-invalid', !isValid);
+                errorElement.style.display = isValid ? 'none' : 'block';
+            }
+        });
+
+        document.getElementById('hire_date').addEventListener('change', function() {
+            const today = new Date();
+            const hireDate = new Date(this.value);
+            const isValid = hireDate <= today;
+            const errorElement = this.closest('.mb-3').querySelector('.invalid-feedback');
+            
+            this.classList.toggle('is-invalid', !isValid);
+            errorElement.style.display = isValid ? 'none' : 'block';
+        });
+
+        // Validate select fields when changed
+        document.querySelectorAll('select').forEach(select => {
+            select.addEventListener('change', function() {
+                if (this.required) {
+                    const isValid = this.value !== '';
+                    const errorElement = this.closest('.mb-3').querySelector('.invalid-feedback');
+                    
+                    this.classList.toggle('is-invalid', !isValid);
+                    errorElement.style.display = isValid ? 'none' : 'block';
+                }
+            });
         });
     </script>
 </body>

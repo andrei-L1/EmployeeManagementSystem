@@ -1,109 +1,157 @@
 <style>
     :root {
         --primary-color: #6366f1;
-        --sidebar-width: 14rem;
-        --sidebar-collapsed-width: 4.5rem;
+        --sidebar-width: 16rem;
+        --sidebar-collapsed-width: 5rem;
+        --sidebar-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .sidebar {
-        background: linear-gradient(180deg, var(--primary-color) 10%, #4f46e5 100%);
+        background: linear-gradient(180deg, var(--primary-color) 0%, #4f46e5 100%);
         min-height: 100vh;
         width: var(--sidebar-width);
         position: fixed;
         box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
         color: white;
-        transition: all 0.3s ease;
+        transition: var(--sidebar-transition);
         z-index: 1000;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.3) transparent;
+    }
+    
+    .sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .sidebar::-webkit-scrollbar-thumb {
+        background-color: rgba(255,255,255,0.3);
+        border-radius: 3px;
     }
     
     .sidebar .nav-link {
-        color: rgba(255, 255, 255, 0.8);
-        padding: 1rem;
-        margin: 0.2rem 0;
-        border-radius: 0.35rem;
-        font-weight: 600;
+        color: rgba(255, 255, 255, 0.85);
+        padding: 0.85rem 1rem;
+        margin: 0.15rem 0.5rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
         white-space: nowrap;
         overflow: hidden;
-        transition: all 0.3s ease;
+        transition: var(--sidebar-transition);
+        display: flex;
+        align-items: center;
+        position: relative;
     }
     
     .sidebar .nav-link:hover {
         color: white;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.15);
+        transform: translateX(4px);
     }
     
     .sidebar .nav-link.active {
         color: white;
-        background-color: rgba(255, 255, 255, 0.2);
+        background-color: rgba(255, 255, 255, 0.25);
+        font-weight: 600;
+    }
+    
+    .sidebar .nav-link.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: white;
+        border-radius: 4px 0 0 4px;
     }
     
     .sidebar .nav-link i {
-        margin-right: 0.5rem;
+        margin-right: 0.75rem;
         width: 1.25rem;
         text-align: center;
-        transition: margin 0.3s ease;
+        transition: var(--sidebar-transition);
+        font-size: 1.1rem;
     }
     
     .sidebar-brand {
-        padding: 1.5rem 1rem;
+        padding: 1.25rem 1rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        position: relative;
+        min-height: 70px;
     }
     
     .sidebar-brand-text {
-        transition: opacity 0.3s ease;
+        transition: var(--sidebar-transition);
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .sidebar-brand-text h4 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.25rem;
     }
     
     .sidebar-divider {
         border-top: 1px solid rgba(255, 255, 255, 0.15);
-        margin: 1rem 0;
+        margin: 0.75rem 1rem;
     }
     
     .role-badge {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         padding: 0.35em 0.65em;
-        font-weight: 600;
+        font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
+        border-radius: 0.25rem;
+        align-self: flex-start;
     }
     
     .badge-admin {
-        background-color: #7c3aed;
+        background-color: rgba(124, 58, 237, 0.9);
     }
     
     .badge-hr {
-        background-color: #db2777;
+        background-color: rgba(219, 39, 119, 0.9);
     }
     
     .badge-manager {
-        background-color: #ea580c;
+        background-color: rgba(234, 88, 12, 0.9);
     }
     
     .badge-employee {
-        background-color: #059669;
+        background-color: rgba(5, 150, 105, 0.9);
     }
     
     /* Mobile toggle button */
     .sidebar-toggle {
         display: none;
         position: fixed;
-        bottom: 1rem;
-        left: 1rem;
+        bottom: 1.5rem;
+        left: 1.5rem;
         z-index: 1100;
-        width: 3rem;
-        height: 3rem;
+        width: 3.25rem;
+        height: 3.25rem;
         border-radius: 50%;
         background-color: var(--primary-color);
         color: white;
         border: none;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         cursor: pointer;
         transition: all 0.3s ease;
     }
     
     .sidebar-toggle:hover {
         transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar-toggle i {
+        font-size: 1.25rem;
     }
     
     /* Collapsed state */
@@ -113,21 +161,60 @@
     
     .sidebar-collapsed .sidebar-brand-text,
     .sidebar-collapsed .nav-link-text {
-        display: none;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        overflow: hidden;
     }
     
     .sidebar-collapsed .nav-link {
-        padding: 1rem 0.5rem;
-        text-align: center;
+        padding: 0.85rem 0;
+        margin: 0.15rem 0.5rem;
+        justify-content: center;
     }
     
     .sidebar-collapsed .nav-link i {
         margin-right: 0;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
     }
     
     .sidebar-collapsed .role-badge {
         display: none;
+    }
+    
+    .sidebar-collapsed .sidebar-divider {
+        margin: 0.75rem 0.5rem;
+    }
+    
+    .sidebar-collapsed .sidebar-brand {
+        padding: 1.25rem 0.5rem;
+        justify-content: center;
+    }
+    
+    /* Tooltip for collapsed state */
+    .nav-link .tooltip-text {
+        visibility: hidden;
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        margin-left: 1rem;
+        white-space: nowrap;
+        z-index: 1;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .sidebar-collapsed .nav-link:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
     }
     
     /* Mobile responsiveness */
@@ -135,6 +222,7 @@
         .sidebar {
             transform: translateX(-100%);
             width: var(--sidebar-width);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.1);
         }
         
         .sidebar-mobile-show {
@@ -149,18 +237,67 @@
         
         .main-content {
             margin-left: 0 !important;
+            width: 100% !important;
         }
     }
     
     /* Smooth transition for main content */
     .main-content {
-        transition: margin 0.3s ease;
+        transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
     }
+    
+    /* Adjust main content when sidebar is collapsed */
+    .sidebar-collapsed ~ .main-content {
+        margin-left: var(--sidebar-collapsed-width);
+        width: calc(100% - var(--sidebar-collapsed-width));
+    }
+    
+    /* Animation for sidebar items */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .sidebar .nav-item {
+        animation: fadeIn 0.3s ease forwards;
+        opacity: 0;
+    }
+    
+    .sidebar .nav-item:nth-child(1) { animation-delay: 0.1s; }
+    .sidebar .nav-item:nth-child(2) { animation-delay: 0.15s; }
+    .sidebar .nav-item:nth-child(3) { animation-delay: 0.2s; }
+    .sidebar .nav-item:nth-child(4) { animation-delay: 0.25s; }
+    .sidebar .nav-item:nth-child(5) { animation-delay: 0.3s; }
+    .sidebar .nav-item:nth-child(6) { animation-delay: 0.35s; }
+    .sidebar .nav-item:nth-child(7) { animation-delay: 0.4s; }
+    .sidebar .nav-item:nth-child(8) { animation-delay: 0.45s; }
+    .sidebar .nav-item:nth-child(9) { animation-delay: 0.5s; }
+    .sidebar .nav-item:nth-child(10) { animation-delay: 0.55s; }
 </style>
 
 <?php
 // Get the current page filename, e.g. 'dashboard.php' or 'record.php'
 $currentPage = basename($_SERVER['PHP_SELF']);
+
+// Get the current file's directory path
+$currentDir = dirname($_SERVER['PHP_SELF']);
+$rootDir = '/employeeYA';
+
+// Calculate the relative path to auth directory
+$pathToRoot = '';
+if (strpos($currentDir, '/views/employees') !== false || 
+    strpos($currentDir, '/views/attendance') !== false || 
+    strpos($currentDir, '/views/payroll') !== false || 
+    strpos($currentDir, '/views/leave') !== false || 
+    strpos($currentDir, '/views/admin') !== false) {
+    $pathToRoot = '../../';
+} elseif (strpos($currentDir, '/views') !== false) {
+    $pathToRoot = '../';
+} else {
+    $pathToRoot = '';
+}
 ?>
 
 <!-- Mobile Toggle Button -->
@@ -169,72 +306,89 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 </button>
 
 <!-- Sidebar -->
-<div class="sidebar p-3" id="sidebar">
+<div class="sidebar p-2" id="sidebar">
     <div class="sidebar-brand">
         <div class="sidebar-brand-text">
-            <h4 class="fw-bold mb-1">EmployeeTrack</h4>
+            <h4>EmployeeTrack</h4>
             <span class="badge role-badge badge-<?= strtolower($_SESSION['user_data']['role_name']) ?>">
                 <?= $_SESSION['user_data']['role_name'] ?>
             </span>
         </div>
         <button class="btn btn-sm btn-link p-0 text-white d-none d-lg-inline" id="sidebarCollapse">
-            <i class="fas fa-times"></i>
+            <i class="fas fa-chevron-left"></i>
         </button>
     </div>
     
     <div class="sidebar-divider"></div>
     
-    <ul class="nav flex-column">
+    <ul class="nav flex-column px-1">
         <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'dashboard.php' ? 'active' : '' ?>" href="dashboard.php">
+            <a class="nav-link <?= $currentPage === 'dashboard.php' ? 'active' : '' ?>" href="/employeeYA/views/dashboard.php">
                 <i class="fas fa-tachometer-alt"></i>
                 <span class="nav-link-text">Dashboard</span>
+                <span class="tooltip-text">Dashboard</span>
             </a>
         </li>
         
         <?php if (hasRole('Admin') || hasRole('HR') || hasRole('Manager')): ?>
         <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'list.php' ? 'active' : '' ?>" href="employees/list.php">
+            <a class="nav-link <?= $currentPage === 'list.php' ? 'active' : '' ?>" href="/employeeYA/views/employees/list.php">
                 <i class="fas fa-users"></i>
                 <span class="nav-link-text">Employees</span>
+                <span class="tooltip-text">Employees</span>
             </a>
         </li>
         <?php endif; ?>
         
         <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'record.php' ? 'active' : '' ?>" href="attendance/record.php">
+            <a class="nav-link <?= $currentPage === 'record.php' ? 'active' : '' ?>" href="/employeeYA/views/attendance/record.php">
                 <i class="fas fa-clipboard-check"></i>
                 <span class="nav-link-text">Attendance</span>
+                <span class="tooltip-text">Attendance</span>
             </a>
         </li>
         
+        <?php if (hasRole('HR') || hasRole('Manager')): ?>
         <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'request.php' ? 'active' : '' ?>" href="leave/request.php">
+            <a class="nav-link <?= $currentPage === 'live-monitor.php' ? 'active' : '' ?>" href="/employeeYA/views/attendance/live-monitor.php">
+                <i class="fas fa-desktop"></i>
+                <span class="nav-link-text">Live Monitor</span>
+                <span class="tooltip-text">Live Monitor</span>
+            </a>
+        </li>
+        <?php endif; ?>
+        
+        <li class="nav-item">
+            <a class="nav-link <?= $currentPage === 'request.php' ? 'active' : '' ?>" href="/employeeYA/views/leave/request.php">
                 <i class="fas fa-calendar-alt"></i>
                 <span class="nav-link-text">Leave</span>
+                <span class="tooltip-text">Leave</span>
             </a>
         </li>
         
         <?php if (hasRole('Admin') || hasRole('HR')): ?>
         <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'process.php' ? 'active' : '' ?>" href="payroll/process.php">
+            <a class="nav-link <?= $currentPage === 'process.php' ? 'active' : '' ?>" href="/employeeYA/views/payroll/process.php">
                 <i class="fas fa-money-bill-wave"></i>
                 <span class="nav-link-text">Payroll</span>
+                <span class="tooltip-text">Payroll</span>
             </a>
         </li>
         <?php endif; ?>
         
         <?php if (hasRole('Admin')): ?>
         <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'reports.php' ? 'active' : '' ?>" href="admin/reports.php">
+            <a class="nav-link <?= $currentPage === 'reports.php' ? 'active' : '' ?>" href="/employeeYA/views/admin/reports.php">
                 <i class="fas fa-chart-bar"></i>
                 <span class="nav-link-text">Reports</span>
+                <span class="tooltip-text">Reports</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'settings.php' ? 'active' : '' ?>" href="admin/settings.php">
+            <a class="nav-link <?= $currentPage === 'settings.php' ? 'active' : '' ?>" href="/employeeYA/views/admin/settings.php">
                 <i class="fas fa-cogs"></i>
                 <span class="nav-link-text">Settings</span>
+                <span class="tooltip-text">Settings</span>
             </a>
         </li>
         <?php endif; ?>
@@ -242,77 +396,135 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     
     <div class="sidebar-divider"></div>
     
-    <ul class="nav flex-column">
+    <ul class="nav flex-column px-1">
         <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'profile.php' ? 'active' : '' ?>" href="profile.php">
+            <a class="nav-link <?= $currentPage === 'profile.php' ? 'active' : '' ?>" href="/employeeYA/views/profile.php">
                 <i class="fas fa-user"></i>
                 <span class="nav-link-text">Profile</span>
+                <span class="tooltip-text">Profile</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="../auth/logout.php">
+            <a class="nav-link" href="#" onclick="confirmLogout(event)">
                 <i class="fas fa-sign-out-alt"></i>
                 <span class="nav-link-text">Logout</span>
+                <span class="tooltip-text">Logout</span>
             </a>
         </li>
     </ul>
 </div>
 
 <script>
-    // Toggle sidebar on mobile
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('sidebar');
-    const sidebarCollapse = document.getElementById('sidebarCollapse');
-    
-    sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('sidebar-mobile-show');
-    });
-    
-    // Collapse/expand sidebar on desktop
-    if (sidebarCollapse) {
-        sidebarCollapse.addEventListener('click', () => {
-            sidebar.classList.toggle('sidebar-collapsed');
-            
-            // Adjust main content margin
-            const mainContent = document.querySelector('.main-content');
-            if (sidebar.classList.contains('sidebar-collapsed')) {
-                mainContent.style.marginLeft = '4.5rem';
-            } else {
-                mainContent.style.marginLeft = '14rem';
-            }
-            
-            // Store preference in localStorage
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+    // Store the path to auth directory
+    const authPath = '<?php echo $pathToRoot; ?>auth/logout.php';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarCollapse = document.getElementById('sidebarCollapse');
+        const mainContent = document.querySelector('.main-content');
+        
+        // Mobile toggle functionality
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('sidebar-mobile-show');
+            document.body.classList.toggle('no-scroll');
         });
-    }
-    
-    // Check for saved sidebar state
-    document.addEventListener('DOMContentLoaded', () => {
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            sidebar.classList.add('sidebar-collapsed');
-            const mainContent = document.querySelector('.main-content');
-            if (mainContent) {
-                mainContent.style.marginLeft = '4.5rem';
-            }
+        
+        // Desktop collapse/expand functionality
+        if (sidebarCollapse) {
+            sidebarCollapse.addEventListener('click', () => {
+                sidebar.classList.toggle('sidebar-collapsed');
+                
+                // Update icon based on state
+                const icon = sidebarCollapse.querySelector('i');
+                if (sidebar.classList.contains('sidebar-collapsed')) {
+                    icon.classList.remove('fa-chevron-left');
+                    icon.classList.add('fa-chevron-right');
+                } else {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-chevron-left');
+                }
+                
+                // Adjust main content margin if it exists
+                if (mainContent) {
+                    if (sidebar.classList.contains('sidebar-collapsed')) {
+                        mainContent.style.marginLeft = '5rem';
+                    } else {
+                        mainContent.style.marginLeft = '16rem';
+                    }
+                }
+                
+                // Store preference in localStorage
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('sidebar-collapsed'));
+            });
         }
         
-        // Close mobile sidebar when clicking a link
-        const navLinks = document.querySelectorAll('.sidebar .nav-link');
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                if (window.innerWidth < 992) {
-                    sidebar.classList.remove('sidebar-mobile-show');
+        // Initialize sidebar state
+        function initializeSidebar() {
+            // Check for saved sidebar state
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            
+            if (isCollapsed) {
+                sidebar.classList.add('sidebar-collapsed');
+                if (mainContent) mainContent.style.marginLeft = '5rem';
+                
+                // Update icon if collapsed
+                if (sidebarCollapse) {
+                    const icon = sidebarCollapse.querySelector('i');
+                    icon.classList.remove('fa-chevron-left');
+                    icon.classList.add('fa-chevron-right');
                 }
+            }
+            
+            // Close mobile sidebar when clicking a link
+            const navLinks = document.querySelectorAll('.sidebar .nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth < 992) {
+                        sidebar.classList.remove('sidebar-mobile-show');
+                        document.body.classList.remove('no-scroll');
+                    }
+                });
             });
+        }
+        
+        initializeSidebar();
+        
+        // Close mobile sidebar when clicking outside
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 992 && 
+                !sidebar.contains(e.target) && 
+                e.target !== sidebarToggle) {
+                sidebar.classList.remove('sidebar-mobile-show');
+                document.body.classList.remove('no-scroll');
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 992) {
+                sidebar.classList.remove('sidebar-mobile-show');
+                document.body.classList.remove('no-scroll');
+            }
         });
     });
-    
-    // Close mobile sidebar when clicking outside
-    document.addEventListener('click', (e) => {
-        if (window.innerWidth < 992 && 
-            !sidebar.contains(e.target) && 
-            e.target !== sidebarToggle) {
-            sidebar.classList.remove('sidebar-mobile-show');
-        }
-    });
+
+    // Add logout confirmation function
+    function confirmLogout(event) {
+        event.preventDefault();
+        Swal.fire({
+            title: 'Logout Confirmation',
+            text: 'Are you sure you want to logout?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#6366f1',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = authPath;
+            }
+        });
+    }
 </script>
