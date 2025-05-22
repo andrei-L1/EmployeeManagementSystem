@@ -330,8 +330,8 @@ foreach ($results as $row) {
             color: var(--gray-800);
             transition: all var(--transition-speed) ease;
             background: linear-gradient(135deg, var(--gray-800), var(--gray-600));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            --webkit-background-clip: text;
+            --webkit-text-fill-color: transparent;
         }
 
         .stat-card:hover .stat-value {
