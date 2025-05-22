@@ -75,6 +75,7 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-color: #4e73df;
@@ -83,130 +84,183 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
             --info-color: #36b9cc;
             --warning-color: #f6c23e;
             --danger-color: #e74a3b;
+            --card-bg: #fff;
+            --card-shadow: 0 4px 24px 0 rgba(34, 41, 47, 0.08);
+            --border-radius: 1.25rem;
+            --avatar-bg: linear-gradient(135deg, #e3eafe 0%, #f8fafc 100%);
         }
 
         body {
-            background-color: #f8f9fc;
+            background-color: #f4f6fb;
+            font-family: 'Inter', sans-serif;
         }
 
         .main-content {
-            padding: 2rem;
+            padding: 2rem 0.5rem;
             transition: margin-left 0.3s;
         }
 
         .page-header {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            margin-bottom: 1.5rem;
+            background: var(--card-bg);
+            padding: 2rem 2.5rem 1.5rem 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
         }
-
-        .employee-card {
-            transition: all 0.3s ease;
-            border: none;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            border-radius: 0.5rem;
-            overflow: hidden;
+        .page-header h2 {
+            font-weight: 700;
+            font-size: 2rem;
         }
-        
-        .employee-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
-        }
-
-        .employee-avatar {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 4px solid #fff;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            margin: 1rem auto;
-        }
-        
-        .status-badge {
-            font-size: 0.75rem;
-            padding: 0.5em 1em;
-            font-weight: 600;
-            border-radius: 2rem;
+        .page-header p {
+            font-size: 1rem;
         }
 
         .filter-card {
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            margin-bottom: 1.5rem;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 1rem;
+            z-index: 10;
         }
-
         .filter-card .card-body {
-            padding: 1.5rem;
+            padding: 1.5rem 2rem;
         }
-
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        .form-select, .form-control {
+            border-radius: 0.75rem;
+            font-size: 1rem;
+        }
         .btn-action {
             padding: 0.5rem 1rem;
-            border-radius: 0.35rem;
-            font-weight: 500;
+            border-radius: 0.75rem;
+            font-weight: 600;
             transition: all 0.2s;
+            font-size: 1rem;
+        }
+        .btn-action:hover, .btn-action:focus {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 2px 8px 0 rgba(78, 115, 223, 0.15);
         }
 
-        .btn-action:hover {
-            transform: translateY(-2px);
+        .employee-card {
+            transition: box-shadow 0.3s, transform 0.3s;
+            border: none;
+            box-shadow: var(--card-shadow);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: var(--card-bg);
+            margin-bottom: 2rem;
         }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        .employee-card:hover {
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 8px 32px 0 rgba(34, 41, 47, 0.12);
         }
-
-        .empty-state i {
-            font-size: 4rem;
-            color: var(--secondary-color);
-            margin-bottom: 1rem;
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.8);
+        .employee-avatar, .default-avatar {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.10);
+            margin: 1.5rem auto 1rem auto;
             display: flex;
-            justify-content: center;
             align-items: center;
-            z-index: 9999;
-            display: none;
-        }
-
-        .spinner {
-            width: 3rem;
-            height: 3rem;
-        }
-
-        .department-badge {
-            background: #e8f0fe;
+            justify-content: center;
+            background: var(--avatar-bg);
+            font-size: 2.5rem;
             color: var(--primary-color);
-            padding: 0.35em 0.65em;
-            border-radius: 0.25rem;
-            font-size: 0.875rem;
         }
-
+        .employee-avatar {
+            object-fit: cover;
+            background: #fff;
+        }
+        .default-avatar i {
+            font-size: 2.5rem;
+        }
+        .card-title {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 0.5em 1.2em;
+            font-weight: 700;
+            border-radius: 2rem;
+            letter-spacing: 0.03em;
+        }
         .employee-info {
-            margin: 1rem 0;
+            margin: 1rem 0 0.5rem 0;
         }
-
         .employee-info p {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
             color: var(--secondary-color);
+            font-size: 0.98rem;
         }
-
         .employee-info i {
             width: 1.5rem;
             color: var(--primary-color);
+        }
+        .action-group {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .action-group .btn {
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            background: #f4f6fb;
+            color: var(--primary-color);
+            border: none;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .action-group .btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+            box-shadow: 0 2px 8px 0 rgba(78, 115, 223, 0.15);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            margin-top: 2rem;
+        }
+        .empty-state i {
+            font-size: 5rem;
+            color: var(--secondary-color);
+            margin-bottom: 1.5rem;
+        }
+        .empty-state h3 {
+            font-weight: 700;
+            font-size: 2rem;
+        }
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+        @media (max-width: 767px) {
+            .main-content {
+                padding: 1rem 0.2rem;
+            }
+            .employee-card {
+                margin-bottom: 1.2rem;
+            }
+            .page-header, .filter-card {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -316,9 +370,20 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="col-md-4 mb-4">
                     <div class="card employee-card h-100">
                         <div class="card-body text-center">
-                            <img src="<?= $employee['profile_picture'] ?? '../../assets/img/default-profile.jpg' ?>" 
-                                 alt="Profile Picture" 
-                                 class="employee-avatar">
+                            <?php
+                            $profilePic = $employee['profile_picture'] ?? '';
+                            if (!$profilePic || !file_exists('../../' . $profilePic)) {
+                            ?>
+                                <div class="default-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            <?php
+                            } else {
+                            ?>
+                                <img src="<?= htmlspecialchars($profilePic) ?>" 
+                                     alt="Profile Picture" 
+                                     class="employee-avatar">
+                            <?php } ?>
                             
                             <h5 class="card-title mb-1"><?= htmlspecialchars($employee['full_name']) ?></h5>
                             <p class="text-muted mb-2"><?= htmlspecialchars($employee['position_name']) ?></p>
@@ -338,22 +403,21 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <p><i class="fas fa-id-card me-2"></i> <?= htmlspecialchars($employee['employee_id']) ?></p>
                             </div>
                             
-                            <div class="d-flex justify-content-center gap-2">
+                            <div class="action-group">
                                 <a href="view.php?id=<?= $employee['employee_id'] ?>" 
-                                   class="btn btn-info text-white btn-action">
-                                    <i class="fas fa-eye me-1"></i> View
+                                   class="btn" title="View Profile" data-bs-toggle="tooltip">
+                                    <i class="fas fa-eye"></i>
                                 </a>
-                                
                                 <?php if (hasRole('HR')): ?>
                                 <a href="edit.php?id=<?= $employee['employee_id'] ?>" 
-                                   class="btn btn-warning text-white btn-action">
-                                    <i class="fas fa-edit me-1"></i> Edit
+                                   class="btn" title="Edit" data-bs-toggle="tooltip">
+                                    <i class="fas fa-edit"></i>
                                 </a>
-                                
-                                <button class="btn btn-danger btn-action delete-employee" 
+                                <button class="btn delete-employee" 
                                         data-id="<?= $employee['employee_id'] ?>"
-                                        data-name="<?= htmlspecialchars($employee['full_name']) ?>">
-                                    <i class="fas fa-trash me-1"></i> Delete
+                                        data-name="<?= htmlspecialchars($employee['full_name']) ?>"
+                                        title="Delete" data-bs-toggle="tooltip">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                                 <?php endif; ?>
                             </div>
@@ -451,6 +515,12 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Hide loading overlay when page is fully loaded
         window.addEventListener('load', hideLoading);
+
+        // Enable Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     </script>
 </body>
 </html>

@@ -330,7 +330,17 @@ if (strpos($currentDir, '/views/employees') !== false ||
             </a>
         </li>
         
-        <?php if (hasRole('Admin') || hasRole('HR') || hasRole('Manager')): ?>
+        <?php if (hasRole('Admin')): ?>
+        <li class="nav-item">
+            <a class="nav-link <?= $currentPage === 'users.php' ? 'active' : '' ?>" href="/employeeYA/views/admin/users.php">
+                <i class="fas fa-user-cog"></i>
+                <span class="nav-link-text">User Management</span>
+                <span class="tooltip-text">User Management</span>
+            </a>
+        </li>
+        <?php endif; ?>
+        
+        <?php if (hasRole('HR') || hasRole('Manager')): ?>
         <li class="nav-item">
             <a class="nav-link <?= $currentPage === 'list.php' ? 'active' : '' ?>" href="/employeeYA/views/employees/list.php">
                 <i class="fas fa-users"></i>
