@@ -49,28 +49,58 @@ $leaveBalances = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #1a237e;
-            --secondary-color: #283593;
-            --success-color: #00c853;
-            --info-color: #0091ea;
-            --warning-color: #ffd600;
-            --danger-color: #d50000;
-            --light-color: #f5f7fa;
-            --dark-color: #1a237e;
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-dark: #3730a3;
+            --secondary: #f472b6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #0ea5e9;
+            --light: #f8fafc;
+            --dark: #1e293b;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
             background-color: #f5f7fa;
-            margin: 0;
-            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .main-content {
+            padding-left: 60px;
+            padding-right: 60px;
+            padding-top: 30px;
+            transition: margin-left 0.3s;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .welcome-section {
+            padding: 1.5rem 0;
+        }
+
+        .welcome-section h1 {
+            color: var(--dark);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-section p {
+            font-size: 0.95rem;
+        }
+
+        .welcome-section i {
+            color: var(--primary);
         }
 
         .profile-header {
-            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             padding: 3rem 0;
             margin-bottom: 2rem;
@@ -88,7 +118,7 @@ $leaveBalances = $stmt->fetchAll(PDO::FETCH_ASSOC);
             background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
             opacity: 0.1;
         }
-        
+
         .profile-picture {
             width: 180px;
             height: 180px;
@@ -97,35 +127,33 @@ $leaveBalances = $stmt->fetchAll(PDO::FETCH_ASSOC);
             object-fit: cover;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
             transition: transform 0.3s ease;
-            background: #e9ecef;
-            display: block;
-            position: relative;
+            background: var(--light);
         }
-        
+
         .default-profile-icon {
             width: 180px;
             height: 180px;
             border-radius: 50%;
             border: 5px solid rgba(255, 255, 255, 0.3);
-            background: #e9ecef;
+            background: var(--light);
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
             font-size: 5rem;
-            color: #b0b3b8;
+            color: var(--primary);
             transition: transform 0.3s ease;
         }
-        
+
         .default-profile-icon:hover {
             transform: scale(1.05);
         }
-        
+
         .profile-picture-container {
             position: relative;
             display: inline-block;
         }
-        
+
         .profile-picture-upload {
             position: absolute;
             bottom: 10px;
@@ -141,193 +169,173 @@ $leaveBalances = $stmt->fetchAll(PDO::FETCH_ASSOC);
             box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
-        
+
         .profile-picture-upload:hover {
-            background: var(--light-color);
+            background: var(--light);
             transform: scale(1.1);
         }
-        
+
         .profile-picture-upload i {
-            color: var(--primary-color);
+            color: var(--primary);
             font-size: 1.2rem;
         }
-        
-        .info-card {
-            border: none;
-            border-radius: 1rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(26, 35, 126, 0.08);
-            transition: all 0.3s ease;
+
+        .card {
             background: white;
+            border-radius: 1rem;
+            padding: 1.75rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
             margin-bottom: 1.5rem;
         }
-        
-        .info-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 2rem 0 rgba(26, 35, 126, 0.12);
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
         }
-        
-        .info-card .card-header {
-            background-color: white;
+
+        .card-header {
+            background: none;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            padding: 1.25rem 1.5rem;
-            border-radius: 1rem 1rem 0 0;
+            padding: 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-        
-        .info-card .card-header h5 {
+
+        .card-header h5 {
             margin: 0;
             font-weight: 600;
-            color: var(--dark-color);
+            color: var(--dark);
         }
-        
+
         .info-item {
             padding: 1rem 1.5rem;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-            transition: background-color 0.3s ease;
+            transition: background-color 0.2s ease;
         }
-        
+
         .info-item:hover {
-            background-color: var(--light-color);
+            background-color: var(--light);
         }
-        
+
         .info-item:last-child {
             border-bottom: none;
         }
-        
+
         .info-label {
             font-weight: 500;
-            color: var(--dark-color);
+            color: var(--dark);
             margin-bottom: 0.25rem;
             font-size: 0.875rem;
         }
-        
+
         .info-value {
-            color: #2d3748;
+            color: var(--dark);
             font-weight: 400;
         }
-        
-        .edit-btn {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
+
+        .btn {
+            padding: 0.75rem 1.5rem;
             font-weight: 500;
-            border-radius: 0.5rem;
-            transition: all 0.3s ease;
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
         }
-        
-        .edit-btn:hover {
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background: var(--light);
+            border-color: var(--primary-light);
+            color: var(--primary);
             transform: translateY(-2px);
         }
-        
+
         .badge {
             padding: 0.5em 0.75em;
             font-weight: 500;
             border-radius: 0.5rem;
         }
-        
-        .badge.bg-success {
-            background-color: #00c853 !important;
-        }
-        
-        .badge.bg-info {
-            background-color: #0091ea !important;
-        }
-        
-        .badge.bg-warning {
-            background-color: #ffd600 !important;
-            color: #000;
-        }
-        
-        .badge.bg-danger {
-            background-color: #d50000 !important;
-        }
-        
+
         .modal-content {
             border: none;
             border-radius: 1rem;
             box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.15);
         }
-        
+
         .modal-header {
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             padding: 1.5rem;
         }
-        
+
         .modal-body {
             padding: 1.5rem;
         }
-        
+
         .modal-footer {
             border-top: 1px solid rgba(0, 0, 0, 0.05);
             padding: 1.5rem;
         }
-        
+
         .form-control {
-            border-radius: 0.5rem;
+            border-radius: 0.75rem;
             padding: 0.75rem 1rem;
             border: 1px solid rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.1);
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            font-weight: 500;
-            border-radius: 0.5rem;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background-color: #1a237e;
-            border-color: #1a237e;
-        }
-        
-        .btn-primary:hover {
-            background-color: #283593;
-            border-color: #283593;
-            transform: translateY(-2px);
-        }
-        
-        .btn-secondary {
-            background-color: #6c757d;
-            border-color: #6c757d;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #5a6268;
-            border-color: #545b62;
-            transform: translateY(-2px);
+            transition: all 0.2s ease;
         }
 
-        .main-content {
-            padding: 0;
-            margin-top: 0;
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+        }
+
+        .form-control:hover {
+            border-color: var(--primary-light);
         }
 
         @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 1rem;
+            }
+
             .profile-header {
                 padding: 2rem 0;
             }
-            
+
             .profile-picture {
                 width: 150px;
                 height: 150px;
             }
-            
-            .info-card {
-                margin-bottom: 1rem;
+
+            .card {
+                padding: 1.25rem;
+            }
+
+            .btn {
+                padding: 0.625rem 1.25rem;
             }
         }
     </style>
 </head>
 <body>
     <?php include '../includes/sidebar.php'; ?>
-    
+
     <div class="main-content">
         <!-- Profile Header -->
         <div class="profile-header">
@@ -370,14 +378,14 @@ $leaveBalances = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <div class="container">
+        <div class="dashboard-container">
             <div class="row">
                 <!-- Personal Information -->
                 <div class="col-md-6 mb-4">
-                    <div class="card info-card">
+                    <div class="card">
                         <div class="card-header">
-                            <h5 class="mb-0">Personal Information</h5>
-                            <button class="btn btn-sm btn-primary edit-btn" data-section="personal">
+                            <h5 class="mb-0"><i class="fas fa-user me-2"></i>Personal Information</h5>
+                            <button class="btn btn-sm btn-primary" data-section="personal">
                                 <i class="fas fa-edit me-1"></i> Edit
                             </button>
                         </div>
@@ -414,9 +422,9 @@ $leaveBalances = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- Employment Information -->
                 <div class="col-md-6 mb-4">
-                    <div class="card info-card">
+                    <div class="card">
                         <div class="card-header">
-                            <h5 class="mb-0">Employment Information</h5>
+                            <h5 class="mb-0"><i class="fas fa-briefcase me-2"></i>Employment Information</h5>
                         </div>
                         <div class="card-body p-0">
                             <div class="info-item">
@@ -457,10 +465,10 @@ $leaveBalances = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- Recent Attendance -->
                 <div class="col-md-6 mb-4">
-                    <div class="card info-card">
+                    <div class="card">
                         <div class="card-header">
-                            <h5 class="mb-0">Recent Attendance</h5>
-                            <a href="attendance/record.php" class="btn btn-sm btn-primary edit-btn">
+                            <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Recent Attendance</h5>
+                            <a href="attendance/record.php" class="btn btn-sm btn-primary">
                                 <i class="fas fa-list me-1"></i> View All
                             </a>
                         </div>
@@ -501,10 +509,10 @@ $leaveBalances = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 <!-- Leave Balance -->
                 <div class="col-md-6 mb-4">
-                    <div class="card info-card">
+                    <div class="card">
                         <div class="card-header">
-                            <h5 class="mb-0">Leave Balance</h5>
-                            <a href="leave/request.php" class="btn btn-sm btn-primary edit-btn">
+                            <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Leave Balance</h5>
+                            <a href="leave/request.php" class="btn btn-sm btn-primary">
                                 <i class="fas fa-calendar-plus me-1"></i> Request Leave
                             </a>
                         </div>
@@ -540,7 +548,7 @@ $leaveBalances = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit Personal Information</h5>
+                    <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Edit Personal Information</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">

@@ -70,11 +70,251 @@ $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-dark: #3730a3;
+            --secondary: #f472b6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #0ea5e9;
+            --light: #f8fafc;
+            --dark: #1e293b;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
         .main-content {
             padding-left: 60px;
             padding-right: 60px;
             padding-top: 30px;
             transition: margin-left 0.3s;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .welcome-section {
+            padding: 1.5rem 0;
+        }
+
+        .welcome-section h1 {
+            color: var(--dark);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-section p {
+            font-size: 0.95rem;
+        }
+
+        .welcome-section i {
+            color: var(--primary);
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.75rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            border-bottom-width: 1px;
+        }
+
+        .table td {
+            vertical-align: middle;
+            padding: 1rem;
+        }
+
+        .badge {
+            padding: 0.5em 0.75em;
+            font-weight: 500;
+            border-radius: 0.5rem;
+        }
+
+        .modal-content {
+            border-radius: 1rem;
+            border: none;
+        }
+
+        .modal-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-control, .form-select {
+            border-radius: 0.5rem;
+            padding: 0.625rem 1rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+        }
+
+        .alert {
+            border-radius: 0.75rem;
+            border: none;
+            padding: 1rem 1.5rem;
+        }
+
+        .alert-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .alert-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            border-radius: 0.5rem;
+            padding: 0.5rem 2rem 0.5rem 1rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            margin: 0 0.25rem;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: var(--primary-light);
+            border-color: var(--primary-light);
+            color: white !important;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .bg-primary-subtle {
+            background-color: rgba(79, 70, 229, 0.1) !important;
+        }
+
+        .text-primary {
+            color: var(--primary) !important;
+        }
+
+        .bg-success-subtle {
+            background-color: rgba(16, 185, 129, 0.1) !important;
+        }
+
+        .text-success {
+            color: var(--success) !important;
+        }
+
+        .bg-warning-subtle {
+            background-color: rgba(245, 158, 11, 0.1) !important;
+        }
+
+        .text-warning {
+            color: var(--warning) !important;
+        }
+
+        .bg-danger-subtle {
+            background-color: rgba(239, 68, 68, 0.1) !important;
+        }
+
+        .text-danger {
+            color: var(--danger) !important;
+        }
+
+        .bg-info-subtle {
+            background-color: rgba(14, 165, 233, 0.1) !important;
+        }
+
+        .text-info {
+            color: var(--info) !important;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1.25rem;
+            }
         }
     </style>
 </head>
@@ -82,16 +322,28 @@ $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php include '../../includes/sidebar.php'; ?>
     
     <div class="main-content">
-        <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>User Management</h2>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                    <i class="fas fa-plus"></i> Add New User
-                </button>
+        <div class="dashboard-container">
+            <!-- Dashboard Header -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="welcome-section">
+                        <h1 class="h3 mb-2">User Management</h1>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-users me-2"></i>
+                            Manage system users and their roles
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fas fa-plus me-2"></i> Add New User
+                    </button>
+                </div>
             </div>
             
             <?php if (isset($_SESSION['success'])): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
                     <?= $_SESSION['success'] ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -100,82 +352,82 @@ $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             <?php if (isset($_SESSION['error'])): ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
                     <?= $_SESSION['error'] ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 <?php unset($_SESSION['error']); ?>
             <?php endif; ?>
             
-            <div class="card shadow mb-4">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover" id="usersTable">
-                            <thead>
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Employee Info</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($users as $user): ?>
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Employee Info</th>
-                                    <th>Status</th>
-                                    <th>Last Login</th>
-                                    <th>Actions</th>
+                                    <td><?= $user['user_id'] ?></td>
+                                    <td><?= htmlspecialchars($user['username']) ?></td>
+                                    <td><?= htmlspecialchars($user['email']) ?></td>
+                                    <td>
+                                        <span class="badge bg-<?= strtolower($user['role_name']) === 'admin' ? 'danger' : 
+                                            (strtolower($user['role_name']) === 'hr' ? 'warning' : 
+                                            (strtolower($user['role_name']) === 'manager' ? 'info' : 'success')) ?>">
+                                            <?= htmlspecialchars($user['role_name']) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php if ($user['employee_id']): ?>
+                                            <?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?>
+                                            <br>
+                                            <small class="text-muted">
+                                                <?= htmlspecialchars($user['position_name']) ?> in 
+                                                <?= htmlspecialchars($user['department_name']) ?>
+                                            </small>
+                                        <?php else: ?>
+                                            <span class="text-muted">Not assigned</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <form method="POST" class="d-inline">
+                                            <input type="hidden" name="user_id" value="<?= $user['user_id'] ?>">
+                                            <button type="submit" name="toggle_status" class="btn btn-sm btn-<?= $user['is_active'] ? 'success' : 'secondary' ?>">
+                                                <i class="fas fa-<?= $user['is_active'] ? 'check-circle' : 'times-circle' ?> me-1"></i>
+                                                <?= $user['is_active'] ? 'Active' : 'Inactive' ?>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td><?= $user['last_login'] ? date('M d, Y H:i', strtotime($user['last_login'])) : 'Never' ?></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-primary edit-user" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editUserModal"
+                                                data-user='<?= htmlspecialchars(json_encode($user)) ?>'>
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger delete-user"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteUserModal"
+                                                data-user-id="<?= $user['user_id'] ?>"
+                                                data-username="<?= htmlspecialchars($user['username']) ?>">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($users as $user): ?>
-                                    <tr>
-                                        <td><?= $user['user_id'] ?></td>
-                                        <td><?= htmlspecialchars($user['username']) ?></td>
-                                        <td><?= htmlspecialchars($user['email']) ?></td>
-                                        <td>
-                                            <span class="badge bg-<?= strtolower($user['role_name']) === 'admin' ? 'danger' : 
-                                                (strtolower($user['role_name']) === 'hr' ? 'warning' : 
-                                                (strtolower($user['role_name']) === 'manager' ? 'info' : 'success')) ?>">
-                                                <?= htmlspecialchars($user['role_name']) ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <?php if ($user['employee_id']): ?>
-                                                <?= htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) ?>
-                                                <br>
-                                                <small class="text-muted">
-                                                    <?= htmlspecialchars($user['position_name']) ?> in 
-                                                    <?= htmlspecialchars($user['department_name']) ?>
-                                                </small>
-                                            <?php else: ?>
-                                                <span class="text-muted">Not assigned</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <form method="POST" class="d-inline">
-                                                <input type="hidden" name="user_id" value="<?= $user['user_id'] ?>">
-                                                <button type="submit" name="toggle_status" class="btn btn-sm btn-<?= $user['is_active'] ? 'success' : 'secondary' ?>">
-                                                    <?= $user['is_active'] ? 'Active' : 'Inactive' ?>
-                                                </button>
-                                            </form>
-                                        </td>
-                                        <td><?= $user['last_login'] ? date('M d, Y H:i', strtotime($user['last_login'])) : 'Never' ?></td>
-                                        <td>
-                                            <button type="button" class="btn btn-sm btn-primary edit-user" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#editUserModal"
-                                                    data-user='<?= htmlspecialchars(json_encode($user)) ?>'>
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-danger delete-user"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deleteUserModal"
-                                                    data-user-id="<?= $user['user_id'] ?>"
-                                                    data-username="<?= htmlspecialchars($user['username']) ?>">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -188,7 +440,7 @@ $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <form action="add_user.php" method="POST">
                     <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                     <div class="modal-header">
-                        <h5 class="modal-title">Add New User</h5>
+                        <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add New User</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -215,7 +467,9 @@ $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add User</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add User
+                        </button>
                     </div>
                 </form>
             </div>
@@ -230,7 +484,7 @@ $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                     <input type="hidden" name="user_id" id="edit_user_id">
                     <div class="modal-header">
-                        <h5 class="modal-title">Edit User</h5>
+                        <h5 class="modal-title"><i class="fas fa-user-edit me-2"></i>Edit User</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -257,7 +511,9 @@ $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
                     </div>
                 </form>
             </div>
@@ -272,16 +528,18 @@ $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                     <input type="hidden" name="user_id" id="delete_user_id">
                     <div class="modal-header">
-                        <h5 class="modal-title">Confirm Delete</h5>
+                        <h5 class="modal-title"><i class="fas fa-trash-alt me-2"></i>Confirm Delete</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <p>Are you sure you want to delete user: <span id="delete_username" class="fw-bold"></span>?</p>
-                        <p class="text-danger">This action cannot be undone.</p>
+                        <p class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>This action cannot be undone.</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" name="delete_user" class="btn btn-danger">Delete User</button>
+                        <button type="submit" name="delete_user" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i>Delete User
+                        </button>
                     </div>
                 </form>
             </div>

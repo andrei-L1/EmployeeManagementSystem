@@ -55,7 +55,7 @@ try {
         foreach ($data['employee_ids'] as $employeeId) {
             // Get employee details
             $stmt = $conn->prepare("
-                SELECT e.*, p.base_salary, p.position_name
+                SELECT e.*, p.position_name, p.base_salary
                 FROM employees e
                 JOIN positions p ON e.position_id = p.position_id
                 WHERE e.employee_id = ? AND e.deleted_at IS NULL
@@ -67,70 +67,14 @@ try {
                 throw new Exception("Employee not found: ID $employeeId");
             }
 
-            // Calculate base salary
-            $baseSalary = $employee['base_salary'];
-            $workingDays = 22; // Standard working days per month
-            $dailyRate = $baseSalary / $workingDays;
-
-            // Get attendance records
-            $stmt = $conn->prepare("
-                SELECT 
-                    COUNT(CASE WHEN status = 'Present' THEN 1 END) as present_days,
-                    COUNT(CASE WHEN status = 'Late' THEN 1 END) as late_days,
-                    COUNT(CASE WHEN status = 'Absent' THEN 1 END) as absent_days
-                FROM attendance_records
-                WHERE employee_id = ?
-                AND date BETWEEN ? AND ?
-                AND deleted_at IS NULL
-            ");
+            // Process payroll using stored procedure
+            $stmt = $conn->prepare("CALL ProcessPayroll(?, ?, ?, @base_salary, @overtime_pay, @deductions, @bonuses, @net_pay)");
             $stmt->execute([$employeeId, $data['start_date'], $data['end_date']]);
-            $attendance = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            // Calculate overtime
-            $stmt = $conn->prepare("
-                SELECT SUM(hours) as total_overtime_hours
-                FROM overtime_requests
-                WHERE employee_id = ?
-                AND date BETWEEN ? AND ?
-                AND status = 'Approved'
-                AND deleted_at IS NULL
-            ");
-            $stmt->execute([$employeeId, $data['start_date'], $data['end_date']]);
-            $overtime = $stmt->fetch(PDO::FETCH_ASSOC);
-            $overtimeHours = $overtime['total_overtime_hours'] ?? 0;
-            $overtimePay = ($dailyRate / 8) * 1.25 * $overtimeHours; // 1.25x rate for overtime
-
-            // Calculate deductions
-            $stmt = $conn->prepare("
-                SELECT SUM(amount) as total_deductions
-                FROM salary_adjustments
-                WHERE employee_id = ?
-                AND adjustment_type = 'Deduction'
-                AND effective_date BETWEEN ? AND ?
-                AND deleted_at IS NULL
-            ");
-            $stmt->execute([$employeeId, $data['start_date'], $data['end_date']]);
-            $deductions = $stmt->fetch(PDO::FETCH_ASSOC);
-            $totalDeductions = $deductions['total_deductions'] ?? 0;
-
-            // Calculate bonuses
-            $stmt = $conn->prepare("
-                SELECT SUM(amount) as total_bonuses
-                FROM salary_adjustments
-                WHERE employee_id = ?
-                AND adjustment_type = 'Bonus'
-                AND effective_date BETWEEN ? AND ?
-                AND deleted_at IS NULL
-            ");
-            $stmt->execute([$employeeId, $data['start_date'], $data['end_date']]);
-            $bonuses = $stmt->fetch(PDO::FETCH_ASSOC);
-            $totalBonuses = $bonuses['total_bonuses'] ?? 0;
-
-            // Calculate net salary
-            $attendancePay = $dailyRate * $attendance['present_days'];
-            $lateDeduction = ($dailyRate * 0.25) * $attendance['late_days'];
-            $grossSalary = $attendancePay + $overtimePay + $totalBonuses;
-            $netSalary = $grossSalary - $lateDeduction - $totalDeductions;
+            // Get the results
+            $stmt = $conn->query("SELECT @base_salary as base_salary, @overtime_pay as overtime_pay, 
+                                @deductions as deductions, @bonuses as bonuses, @net_pay as net_pay");
+            $payrollData = $stmt->fetch(PDO::FETCH_ASSOC);
 
             // Insert payroll record
             $stmt = $conn->prepare("
@@ -141,71 +85,35 @@ try {
                     created_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending', ?, NOW())
             ");
-            
-            $result = $stmt->execute([
+            $stmt->execute([
                 $employeeId,
                 $data['start_date'],
                 $data['end_date'],
-                $baseSalary,
-                $totalBonuses,
-                $totalDeductions + $lateDeduction,
-                $overtimePay,
-                $netSalary,
+                $payrollData['base_salary'],
+                $payrollData['bonuses'],
+                $payrollData['deductions'],
+                $payrollData['overtime_pay'],
+                $payrollData['net_pay'],
                 $data['pay_date']
             ]);
 
-            if (!$result) {
-                throw new Exception("Failed to insert payroll record for employee ID: $employeeId");
-            }
-
-            $payrollId = $conn->lastInsertId();
-
-            // Create notification for employee
+            // Log the action
             $stmt = $conn->prepare("
-                INSERT INTO notifications (
-                    user_id, title, message, type
-                ) VALUES (?, ?, ?, 'payroll')
+                INSERT INTO audit_logs 
+                (user_id, action, table_affected, record_id, new_values, ip_address)
+                VALUES (?, 'CREATE_PAYROLL', 'payroll', ?, ?, ?)
             ");
-            
-            $notificationResult = $stmt->execute([
-                $employee['user_id'],
-                'Payroll Generated',
-                "Your payroll for period " . $data['start_date'] . " to " . $data['end_date'] . 
-                " has been generated. Net salary: ₱" . number_format($netSalary, 2)
+            $stmt->execute([
+                $_SESSION['user_data']['user_id'],
+                $conn->lastInsertId(),
+                json_encode($payrollData),
+                $_SERVER['REMOTE_ADDR']
             ]);
-
-            if (!$notificationResult) {
-                throw new Exception("Failed to create notification for employee ID: $employeeId");
-            }
-        }
-
-        // Log action
-        $stmt = $conn->prepare("
-            INSERT INTO audit_logs (
-                user_id, action, table_affected, new_values, ip_address
-            ) VALUES (?, ?, ?, ?, ?)
-        ");
-        
-        $logResult = $stmt->execute([
-            $_SESSION['user_data']['user_id'],
-            'GENERATE_PAYROLL',
-            'payroll',
-            json_encode([
-                'start_date' => $data['start_date'],
-                'end_date' => $data['end_date'],
-                'pay_date' => $data['pay_date'],
-                'employee_count' => count($data['employee_ids'])
-            ]),
-            $_SERVER['REMOTE_ADDR']
-        ]);
-
-        if (!$logResult) {
-            throw new Exception("Failed to log payroll generation action");
         }
 
         $conn->commit();
         $response['success'] = true;
-        $response['payroll_period'] = $data['start_date'] . ' to ' . $data['end_date'];
+        $response['message'] = 'Payroll processed successfully';
     } catch (Exception $e) {
         $conn->rollBack();
         throw new Exception("Payroll processing failed: " . $e->getMessage());

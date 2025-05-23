@@ -264,7 +264,7 @@ $recentPeriods = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
 
                     try {
-                        const response = await fetch('../../api/payroll/generate.php', {
+                        const response = await fetch('../../api/payroll/process.php', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -287,7 +287,7 @@ $recentPeriods = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             });
                             window.location.href = 'reports.php';
                         } else {
-                            throw new Error(result.error);
+                            throw new Error(result.error || 'Failed to generate payroll');
                         }
                     } catch (error) {
                         console.error('Error:', error);

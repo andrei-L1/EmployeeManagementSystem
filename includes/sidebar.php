@@ -5,56 +5,95 @@
         --sidebar-collapsed-width: 5rem;
         --sidebar-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
+
+    /* Reset and Base Styles */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html, body {
+        height: 100%;
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    /* Sidebar Container */
     .sidebar {
-        background: linear-gradient(180deg, var(--primary-color) 0%, #4f46e5 100%);
-        min-height: 100vh;
-        width: var(--sidebar-width);
         position: fixed;
-        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        top: 0;
+        left: 0;
+        width: var(--sidebar-width);
+        height: 100vh;
+        background: linear-gradient(180deg, var(--primary-color) 0%, #4f46e5 100%);
         color: white;
-        transition: var(--sidebar-transition);
         z-index: 1000;
+        transition: var(--sidebar-transition);
         overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: rgba(255,255,255,0.3) transparent;
     }
-    
+
     .sidebar::-webkit-scrollbar {
         width: 6px;
     }
-    
+
     .sidebar::-webkit-scrollbar-thumb {
         background-color: rgba(255,255,255,0.3);
         border-radius: 3px;
     }
-    
-    .sidebar .nav-link {
-        color: rgba(255, 255, 255, 0.85);
-        padding: 0.85rem 1rem;
-        margin: 0.15rem 0.5rem;
-        border-radius: 0.5rem;
-        font-weight: 500;
-        white-space: nowrap;
-        overflow: hidden;
-        transition: var(--sidebar-transition);
+
+    /* Sidebar Brand */
+    .sidebar-brand {
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1rem;
+        min-height: 70px;
+    }
+
+    .sidebar-brand-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .sidebar-brand-text h4 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    /* Navigation Links */
+    .sidebar .nav {
+        padding: 0.5rem;
+    }
+
+    .sidebar .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 0.85rem 1rem;
+        margin: 0.15rem 0;
+        color: rgba(255, 255, 255, 0.85);
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: var(--sidebar-transition);
         position: relative;
     }
-    
+
     .sidebar .nav-link:hover {
         color: white;
         background-color: rgba(255, 255, 255, 0.15);
         transform: translateX(4px);
     }
-    
+
     .sidebar .nav-link.active {
         color: white;
         background-color: rgba(255, 255, 255, 0.25);
         font-weight: 600;
     }
-    
+
     .sidebar .nav-link.active::before {
         content: '';
         position: absolute;
@@ -65,42 +104,16 @@
         background: white;
         border-radius: 4px 0 0 4px;
     }
-    
+
     .sidebar .nav-link i {
-        margin-right: 0.75rem;
         width: 1.25rem;
+        margin-right: 0.75rem;
         text-align: center;
-        transition: var(--sidebar-transition);
         font-size: 1.1rem;
-    }
-    
-    .sidebar-brand {
-        padding: 1.25rem 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        position: relative;
-        min-height: 70px;
-    }
-    
-    .sidebar-brand-text {
         transition: var(--sidebar-transition);
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
     }
-    
-    .sidebar-brand-text h4 {
-        margin: 0;
-        font-weight: 700;
-        font-size: 1.25rem;
-    }
-    
-    .sidebar-divider {
-        border-top: 1px solid rgba(255, 255, 255, 0.15);
-        margin: 0.75rem 1rem;
-    }
-    
+
+    /* Role Badges */
     .role-badge {
         font-size: 0.65rem;
         padding: 0.35em 0.65em;
@@ -110,55 +123,23 @@
         border-radius: 0.25rem;
         align-self: flex-start;
     }
-    
-    .badge-admin {
-        background-color: rgba(124, 58, 237, 0.9);
+
+    .badge-admin { background-color: rgba(124, 58, 237, 0.9); }
+    .badge-hr { background-color: rgba(219, 39, 119, 0.9); }
+    .badge-manager { background-color: rgba(234, 88, 12, 0.9); }
+    .badge-employee { background-color: rgba(5, 150, 105, 0.9); }
+
+    /* Dividers */
+    .sidebar-divider {
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        margin: 0.75rem 1rem;
     }
-    
-    .badge-hr {
-        background-color: rgba(219, 39, 119, 0.9);
-    }
-    
-    .badge-manager {
-        background-color: rgba(234, 88, 12, 0.9);
-    }
-    
-    .badge-employee {
-        background-color: rgba(5, 150, 105, 0.9);
-    }
-    
-    /* Mobile toggle button */
-    .sidebar-toggle {
-        display: none;
-        position: fixed;
-        bottom: 1.5rem;
-        left: 1.5rem;
-        z-index: 1100;
-        width: 3.25rem;
-        height: 3.25rem;
-        border-radius: 50%;
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .sidebar-toggle:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-    }
-    
-    .sidebar-toggle i {
-        font-size: 1.25rem;
-    }
-    
-    /* Collapsed state */
+
+    /* Collapsed State */
     .sidebar-collapsed {
         width: var(--sidebar-collapsed-width);
     }
-    
+
     .sidebar-collapsed .sidebar-brand-text,
     .sidebar-collapsed .nav-link-text {
         opacity: 0;
@@ -166,32 +147,32 @@
         height: 0;
         overflow: hidden;
     }
-    
+
     .sidebar-collapsed .nav-link {
         padding: 0.85rem 0;
         margin: 0.15rem 0.5rem;
         justify-content: center;
     }
-    
+
     .sidebar-collapsed .nav-link i {
         margin-right: 0;
         font-size: 1.2rem;
     }
-    
+
     .sidebar-collapsed .role-badge {
         display: none;
     }
-    
+
     .sidebar-collapsed .sidebar-divider {
         margin: 0.75rem 0.5rem;
     }
-    
+
     .sidebar-collapsed .sidebar-brand {
         padding: 1.25rem 0.5rem;
         justify-content: center;
     }
-    
-    /* Tooltip for collapsed state */
+
+    /* Tooltips */
     .nav-link .tooltip-text {
         visibility: hidden;
         position: absolute;
@@ -211,22 +192,62 @@
         pointer-events: none;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-    
+
     .sidebar-collapsed .nav-link:hover .tooltip-text {
         visibility: visible;
         opacity: 1;
     }
-    
-    /* Mobile responsiveness */
+
+    /* Mobile Toggle Button */
+    .sidebar-toggle {
+        display: none;
+        position: fixed;
+        bottom: 1.5rem;
+        left: 1.5rem;
+        width: 3.25rem;
+        height: 3.25rem;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        z-index: 1100;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Main Content Adjustments */
+    .main-content {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+        min-height: 100vh;
+        transition: var(--sidebar-transition);
+        background-color: #f5f7fa;
+    }
+
+    .sidebar-collapsed ~ .main-content {
+        margin-left: var(--sidebar-collapsed-width);
+        width: calc(100% - var(--sidebar-collapsed-width));
+    }
+
+    /* Mobile Responsiveness */
     @media (max-width: 992px) {
         .sidebar {
             transform: translateX(-100%);
-            width: var(--sidebar-width);
-            box-shadow: 2px 0 15px rgba(0,0,0,0.1);
         }
         
         .sidebar-mobile-show {
             transform: translateX(0);
+        }
+        
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
         }
         
         .sidebar-toggle {
@@ -234,27 +255,15 @@
             align-items: center;
             justify-content: center;
         }
-        
-        .main-content {
-            margin-left: 0 !important;
-            width: 100% !important;
+    }
+
+    @media (min-width: 993px) {
+        .sidebar-toggle {
+            display: none !important;
         }
     }
-    
-    /* Smooth transition for main content */
-    .main-content {
-        transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        margin-left: var(--sidebar-width);
-        width: calc(100% - var(--sidebar-width));
-    }
-    
-    /* Adjust main content when sidebar is collapsed */
-    .sidebar-collapsed ~ .main-content {
-        margin-left: var(--sidebar-collapsed-width);
-        width: calc(100% - var(--sidebar-collapsed-width));
-    }
-    
-    /* Animation for sidebar items */
+
+    /* Animations */
     @keyframes fadeIn {
         from { opacity: 0; transform: translateX(-10px); }
         to { opacity: 1; transform: translateX(0); }
@@ -301,8 +310,12 @@ if (strpos($currentDir, '/views/employees') !== false ||
 ?>
 
 <!-- Mobile Toggle Button -->
-<button class="sidebar-toggle" id="sidebarToggle">
-    <i class="fas fa-bars"></i>
+<button class="sidebar-toggle d-flex align-items-center justify-content-center" id="sidebarToggle" aria-label="Toggle sidebar">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" style="pointer-events: none;" xmlns="http://www.w3.org/2000/svg">
+        <rect y="6" width="28" height="3" rx="1.5" fill="white"/>
+        <rect y="13" width="28" height="3" rx="1.5" fill="white"/>
+        <rect y="20" width="28" height="3" rx="1.5" fill="white"/>
+    </svg>
 </button>
 
 <!-- Sidebar -->
@@ -350,6 +363,7 @@ if (strpos($currentDir, '/views/employees') !== false ||
         </li>
         <?php endif; ?>
         
+        <?php if (!hasRole('Admin')): ?>
         <li class="nav-item">
             <a class="nav-link <?= $currentPage === 'record.php' ? 'active' : '' ?>" href="/employeeYA/views/attendance/record.php">
                 <i class="fas fa-clipboard-check"></i>
@@ -357,6 +371,7 @@ if (strpos($currentDir, '/views/employees') !== false ||
                 <span class="tooltip-text">Attendance</span>
             </a>
         </li>
+        <?php endif; ?>
         
         <?php if (hasRole('HR') || hasRole('Manager')): ?>
         <li class="nav-item">

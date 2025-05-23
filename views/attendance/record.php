@@ -22,308 +22,259 @@ if ($stmt->rowCount() > 0) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css">
     <style>
         :root {
-            --primary-color: #6366f1;
-            --primary-light: #818cf8;
-            --primary-dark: #4f46e5;
-            --success-color: #10b981;
-            --danger-color: #ef4444;
-            --warning-color: #f59e0b;
-            --info-color: #3b82f6;
-            --light-color: #f8fafc;
-            --dark-color: #1e293b;
-            --gray-50: #f8fafc;
-            --gray-100: #f1f5f9;
-            --gray-200: #e2e8f0;
-            --gray-300: #cbd5e1;
-            --gray-400: #94a3b8;
-            --gray-500: #64748b;
-            --gray-600: #475569;
-            --gray-700: #334155;
-            --gray-800: #1e293b;
-            --gray-900: #0f172a;
-            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --card-shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --transition-speed: 0.3s;
+            --primary: #4e73df;
+            --primary-light: #7e9eff;
+            --primary-dark: #2c56c9;
+            --success: #1cc88a;
+            --danger: #e74a3b;
+            --warning: #f6c23e;
+            --info: #36b9cc;
+            --light: #f8f9fc;
+            --dark: #5a5c69;
+        }
+        
+        body {
+            background-color: #f8f9fc;
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #e3e6f0;
+            padding: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            border-radius: 1rem 1rem 0 0 !important;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .card-header i {
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+        
+        .time-card {
+            border-left: 0.5rem solid var(--primary);
+        }
+        
+        .time-display {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin: 2rem 0;
+            line-height: 1.2;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .btn-clock {
+            padding: 1rem 2rem;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            min-width: 220px;
+            transition: all 0.3s;
+            margin: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+        
+        .btn-clock:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+        }
+        
+        .btn-clock i {
+            font-size: 1.1rem;
+        }
+        
+        .camera-container {
+            border-radius: 1rem;
+            overflow: hidden;
+            background: #000;
+            margin: 2rem 0;
+            position: relative;
+            aspect-ratio: 4/3;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            display: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        #video, #canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        
+        #selfie-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 1rem;
+            display: none;
+        }
+        
+        .status-badge {
+            padding: 0.6rem 1rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .attendance-summary {
+            border-left: 0.5rem solid var(--success);
+        }
+        
+        .location-status {
+            background-color: #f8f9fc;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            margin-top: 2rem;
+            border: 1px solid #e3e6f0;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .location-status i {
+            font-size: 1.25rem;
+            color: var(--primary);
+        }
+        
+        .spinner-border {
+            width: 1.2rem;
+            height: 1.2rem;
+            border-width: 0.2em;
         }
 
-        body {
-            background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
-            color: var(--gray-800);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            min-height: 100vh;
+        .table {
+            margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+
+        .table th {
+            font-weight: 700;
+            color: var(--dark);
+            border-top: none;
+            padding: 1.25rem 1rem;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .table td {
+            padding: 1.25rem 1rem;
+            vertical-align: middle;
+            background: white;
+        }
+
+        .table tr {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .table tr:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .table tr td:first-child {
+            border-radius: 0.75rem 0 0 0.75rem;
+        }
+
+        .table tr td:last-child {
+            border-radius: 0 0.75rem 0.75rem 0;
         }
 
         .main-content {
-            padding: 2rem;
-            transition: all var(--transition-speed) ease;
+            padding: 2.5rem;
         }
 
-        .attendance-card {
-            background: white;
-            border-radius: 1.5rem;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--gray-200);
-            margin-bottom: 2rem;
-            overflow: hidden;
-            transition: all var(--transition-speed) ease;
+        .page-header {
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e3e6f0;
         }
 
-        .attendance-card:hover {
-            box-shadow: var(--card-shadow-hover);
-            border-color: var(--primary-light);
+        .page-header h1 {
+            font-weight: 800;
+            color: var(--dark);
+            font-size: 2rem;
+            margin: 0;
         }
 
-        .attendance-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        .date-badge {
+            background: var(--primary);
             color: white;
-            padding: 1.5rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .attendance-header::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 150px;
-            height: 150px;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1));
-            border-radius: 50%;
-            transform: translate(30%, -30%);
-        }
-
-        .attendance-body {
-            padding: 2rem;
-        }
-
-        .time-display {
-            font-size: 3rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 1.5rem 0;
-            text-align: center;
-        }
-
-        .action-button {
-            padding: 1rem 2rem;
-            border-radius: 1rem;
-            font-weight: 600;
-            transition: all var(--transition-speed) ease;
-            width: 100%;
-            max-width: 300px;
-            margin: 1rem auto;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .action-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
-            transform: translateX(-100%);
-            transition: transform var(--transition-speed) ease;
-        }
-
-        .action-button:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--card-shadow-hover);
-        }
-
-        .action-button:hover::before {
-            transform: translateX(100%);
-        }
-
-        .camera-container {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-            border-radius: 1rem;
-            overflow: hidden;
-            background: var(--gray-900);
-            box-shadow: var(--card-shadow);
-        }
-
-        #video, #canvas {
-            width: 100%;
-            height: auto;
-            display: none;
-        }
-
-        #selfie-preview {
-            width: 100%;
-            height: auto;
-            border-radius: 1rem;
-            display: none;
-        }
-
-        .status-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            font-weight: 600;
-            font-size: 0.875rem;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11);
         }
 
-        .status-badge::before {
-            content: '';
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-
-        .recent-records {
-            background: white;
-            border-radius: 1.5rem;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--gray-200);
-            transition: all var(--transition-speed) ease;
-        }
-
-        .recent-records:hover {
-            box-shadow: var(--card-shadow-hover);
-            border-color: var(--primary-light);
-        }
-
-        .recent-records .card-header {
-            background: none;
-            border-bottom: 1px solid var(--gray-200);
-            padding: 1.5rem;
-        }
-
-        .recent-records .card-header h5 {
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: var(--gray-800);
-        }
-
-        .recent-records .card-header h5::before {
-            content: '';
-            display: inline-block;
-            width: 4px;
-            height: 1.5rem;
-            background: var(--primary-color);
-            border-radius: 2px;
-        }
-
-        .recent-records .table {
-            margin-bottom: 0;
-        }
-
-        .recent-records th {
-            font-weight: 600;
-            color: var(--gray-600);
-            border-bottom: 2px solid var(--gray-200);
-            background: var(--gray-50);
-            padding: 1rem;
-        }
-
-        .recent-records td {
-            padding: 1rem;
-            vertical-align: middle;
-            transition: all var(--transition-speed) ease;
-        }
-
-        .recent-records tr:hover td {
-            background-color: var(--gray-50);
-        }
-
-        .loading-spinner {
-            display: none;
-            width: 1.5rem;
-            height: 1.5rem;
-            border: 3px solid var(--gray-200);
-            border-top: 3px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .location-status {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: var(--gray-600);
-            font-size: 0.875rem;
-            margin-top: 1.5rem;
-            padding: 0.75rem;
-            background: var(--gray-50);
-            border-radius: 0.75rem;
-            border: 1px solid var(--gray-200);
-        }
-
-        .location-status i {
-            color: var(--primary-color);
+        .date-badge i {
+            font-size: 1.1rem;
         }
 
         @media (max-width: 768px) {
             .main-content {
-                padding: 1rem;
-            }
-
-            .attendance-card {
-                border-radius: 1rem;
-            }
-
-            .attendance-header {
-                padding: 1.25rem;
-            }
-
-            .attendance-body {
                 padding: 1.5rem;
             }
 
             .time-display {
                 font-size: 2.5rem;
+                margin: 1.5rem 0;
+            }
+            
+            .btn-clock {
+                min-width: 180px;
+                padding: 0.85rem 1.5rem;
+                margin: 0.5rem;
             }
 
-            .action-button {
-                padding: 0.875rem 1.75rem;
-            }
-
-            .recent-records {
-                border-radius: 1rem;
-            }
-
-            .recent-records .card-header {
+            .card-header {
                 padding: 1.25rem;
             }
 
-            .recent-records th,
-            .recent-records td {
-                padding: 0.875rem;
-            }
-        }
-
-        @media (max-width: 576px) {
-            .time-display {
-                font-size: 2rem;
+            .table th, .table td {
+                padding: 1rem 0.75rem;
             }
 
-            .action-button {
-                padding: 0.75rem 1.5rem;
+            .page-header {
+                margin-bottom: 2rem;
+                padding-bottom: 1rem;
             }
 
-            .location-status {
-                font-size: 0.8rem;
-                padding: 0.5rem;
+            .page-header h1 {
+                font-size: 1.75rem;
             }
         }
     </style>
@@ -332,96 +283,122 @@ if ($stmt->rowCount() > 0) {
 <?php include '../../includes/sidebar.php'; ?>
     
 <div class="main-content">
-    <div class="container">
-        <div class="attendance-card">
-            <div class="attendance-header">
-                <h4 class="mb-0">Daily Time Record</h4>
-            </div>
-            <div class="attendance-body text-center">
-                <h5 class="mb-4"><?= date('l, F j, Y') ?></h5>
-                
-                <?php if ($todayRecord && $todayRecord['time_in'] && !$todayRecord['time_out']): ?>
-                <!-- Clock Out Section -->
-                <div class="time-display">
-                    <i class="fas fa-clock"></i> <?= date('h:i A', strtotime($todayRecord['time_in'])) ?>
-                </div>
-                <p class="text-muted mb-4">You clocked in at <?= date('h:i A', strtotime($todayRecord['time_in'])) ?></p>
-                <button id="clockOutBtn" class="btn btn-danger action-button">
-                    <i class="fas fa-sign-out-alt"></i> Clock Out
-                </button>
-                
-                <?php elseif ($todayRecord && $todayRecord['time_out']): ?>
-                <!-- Already Completed Section -->
-                <div class="alert alert-success" role="alert">
-                    <h5 class="alert-heading">Time Record Completed!</h5>
-                    <div class="time-display">
-                        <div>Clock In: <?= date('h:i A', strtotime($todayRecord['time_in'])) ?></div>
-                        <div>Clock Out: <?= date('h:i A', strtotime($todayRecord['time_out'])) ?></div>
-                    </div>
-                </div>
-                
-                <?php else: ?>
-                <!-- Clock In Section -->
-                <div class="camera-container mb-4">
-                    <video id="video" autoplay playsinline></video>
-                    <canvas id="canvas"></canvas>
-                    <img id="selfie-preview" alt="Selfie Preview">
-                </div>
-                <button id="captureBtn" class="btn btn-secondary action-button mb-3">
-                    <i class="fas fa-camera"></i> Take Verification Photo
-                </button>
-                <button id="clockInBtn" class="btn btn-primary action-button" disabled>
-                    <i class="fas fa-sign-in-alt"></i> Clock In
-                </button>
-                <?php endif; ?>
-                
-                <div class="location-status">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span id="locationText">Acquiring location...</span>
-                </div>
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="page-header d-sm-flex align-items-center justify-content-between">
+            <h1>Time Tracking</h1>
+            <div class="d-none d-sm-inline-block">
+                <span class="date-badge">
+                    <i class="fas fa-calendar-alt"></i> <?= date('l, F j, Y') ?>
+                </span>
             </div>
         </div>
         
-        <!-- Recent Records -->
-        <div class="recent-records">
-            <div class="card-header">
-                <h5 class="mb-0">Recent Attendance</h5>
+        <!-- Content Row -->
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card time-card h-100">
+                    <div class="card-header d-flex align-items-center">
+                        <i class="fas fa-clock me-2"></i>
+                        <h6 class="m-0 font-weight-bold">Daily Time Record</h6>
+                    </div>
+                    <div class="card-body text-center py-4">
+                        <?php if ($todayRecord && $todayRecord['time_in'] && !$todayRecord['time_out']): ?>
+                        <!-- Clock Out Section -->
+                        <div class="time-display mb-3">
+                            <i class="fas fa-sign-in-alt text-primary"></i> <?= date('h:i A', strtotime($todayRecord['time_in'])) ?>
+                        </div>
+                        <p class="text-muted mb-4">You clocked in at <?= date('h:i A', strtotime($todayRecord['time_in'])) ?></p>
+                        <button id="clockOutBtn" class="btn btn-danger btn-clock">
+                            <i class="fas fa-sign-out-alt me-2"></i> Clock Out
+                        </button>
+                        
+                        <?php elseif ($todayRecord && $todayRecord['time_out']): ?>
+                        <!-- Already Completed Section -->
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <h4 class="alert-heading"><i class="fas fa-check-circle"></i> Time Record Completed!</h4>
+                            <hr>
+                            <div class="time-display">
+                                <div class="mb-2">
+                                    <i class="fas fa-sign-in-alt text-primary me-2"></i>
+                                    <?= date('h:i A', strtotime($todayRecord['time_in'])) ?>
+                                </div>
+                                <div>
+                                    <i class="fas fa-sign-out-alt text-danger me-2"></i>
+                                    <?= date('h:i A', strtotime($todayRecord['time_out'])) ?>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <?php else: ?>
+                        <!-- Clock In Section -->
+                        <div class="camera-container mb-4">
+                            <video id="video" autoplay playsinline></video>
+                            <canvas id="canvas"></canvas>
+                            <img id="selfie-preview" alt="Selfie Preview">
+                        </div>
+                        <button id="captureBtn" class="btn btn-secondary btn-clock mb-3">
+                            <i class="fas fa-camera me-2"></i> Take Photo
+                        </button>
+                        <button id="clockInBtn" class="btn btn-primary btn-clock" disabled>
+                            <i class="fas fa-sign-in-alt me-2"></i> Clock In
+                        </button>
+                        <?php endif; ?>
+                        
+                        <div class="location-status text-start">
+                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            <span id="locationText">Acquiring location...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Clock In</th>
-                                <th>Clock Out</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $stmt = $conn->prepare("SELECT * FROM attendance_records 
-                                                  WHERE employee_id = ? 
-                                                  ORDER BY date DESC LIMIT 7");
-                            $stmt->execute([$_SESSION['user_data']['employee_id']]);
-                            while ($record = $stmt->fetch(PDO::FETCH_ASSOC)): ?>
-                            <tr>
-                                <td><?= date('M j, Y', strtotime($record['date'])) ?></td>
-                                <td><?= $record['time_in'] ? date('h:i A', strtotime($record['time_in'])) : '-' ?></td>
-                                <td><?= $record['time_out'] ? date('h:i A', strtotime($record['time_out'])) : '-' ?></td>
-                                <td>
-                                    <span class="status-badge bg-<?= 
-                                        $record['status'] === 'Present' ? 'success' : 
-                                        ($record['status'] === 'Late' ? 'warning' : 
-                                        ($record['status'] === 'On Leave' ? 'info' : 'secondary')) 
-                                    ?>">
-                                        <?= $record['status'] ?>
-                                    </span>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
+            
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex align-items-center">
+                        <i class="fas fa-history me-2"></i>
+                        <h6 class="m-0 font-weight-bold">Recent Attendance</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Clock In</th>
+                                        <th>Clock Out</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $stmt = $conn->prepare("SELECT * FROM attendance_records 
+                                                          WHERE employee_id = ? 
+                                                          ORDER BY date DESC LIMIT 7");
+                                    $stmt->execute([$_SESSION['user_data']['employee_id']]);
+                                    while ($record = $stmt->fetch(PDO::FETCH_ASSOC)): ?>
+                                    <tr>
+                                        <td><?= date('M j, Y', strtotime($record['date'])) ?></td>
+                                        <td><?= $record['time_in'] ? date('h:i A', strtotime($record['time_in'])) : '-' ?></td>
+                                        <td><?= $record['time_out'] ? date('h:i A', strtotime($record['time_out'])) : '-' ?></td>
+                                        <td>
+                                            <?php 
+                                            $badgeClass = '';
+                                            if ($record['status'] === 'Present') $badgeClass = 'bg-success';
+                                            elseif ($record['status'] === 'Late') $badgeClass = 'bg-warning text-dark';
+                                            elseif ($record['status'] === 'On Leave') $badgeClass = 'bg-info';
+                                            else $badgeClass = 'bg-secondary';
+                                            ?>
+                                            <span class="badge <?= $badgeClass ?> status-badge">
+                                                <?= $record['status'] ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -516,10 +493,20 @@ if ($stmt->rowCount() > 0) {
     const selfiePreview = document.getElementById('selfie-preview');
     const captureBtn = document.getElementById('captureBtn');
     const clockInBtn = document.getElementById('clockInBtn');
+    const cameraContainer = document.querySelector('.camera-container');
+    let mediaStream = null;
     
     if (captureBtn) {
         captureBtn.addEventListener('click', async () => {
             try {
+                // Show camera container
+                cameraContainer.style.display = 'block';
+                
+                // Stop any existing stream
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
+
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
                         facingMode: 'user',
@@ -528,18 +515,21 @@ if ($stmt->rowCount() > 0) {
                     } 
                 });
                 
+                mediaStream = stream;
                 video.srcObject = stream;
                 video.style.display = 'block';
                 selfiePreview.style.display = 'none';
                 
                 // Enable clock in button
                 clockInBtn.disabled = false;
+                captureBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Retake Photo';
                 
                 // Stop video stream after 30 seconds if no capture
                 setTimeout(() => {
                     if (video.style.display === 'block') {
                         stream.getTracks().forEach(track => track.stop());
                         video.style.display = 'none';
+                        cameraContainer.style.display = 'none';
                         Swal.fire({
                             title: 'Camera Timeout',
                             text: 'Camera access timed out. Please try again.',
@@ -549,11 +539,19 @@ if ($stmt->rowCount() > 0) {
                 }, 30000);
             } catch (err) {
                 console.error("Camera error:", err);
+                cameraContainer.style.display = 'none';
                 Swal.fire({
                     title: 'Camera Error',
                     text: 'Could not access camera. Please ensure camera permissions are granted.',
                     icon: 'error'
                 });
+            }
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
             }
         });
     }
@@ -570,14 +568,35 @@ if ($stmt->rowCount() > 0) {
                 return;
             }
 
+            if (!video.style.display === 'block') {
+                Swal.fire({
+                    title: 'Photo Required',
+                    text: 'Please take a photo before clocking in.',
+                    icon: 'warning'
+                });
+                return;
+            }
+
             try {
                 // Capture photo
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
                 canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imageData = canvas.toDataURL('image/jpeg');
+                const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // Show preview
+                selfiePreview.src = imageData;
+                selfiePreview.style.display = 'block';
+                video.style.display = 'none';
+                
+                // Stop video stream
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
                 
                 // Show loading state
                 clockInBtn.disabled = true;
-                clockInBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
+                clockInBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...';
 
                 const response = await fetch('../../api/attendance/clock-in.php', {
                     method: 'POST',
@@ -591,6 +610,10 @@ if ($stmt->rowCount() > 0) {
                         imageData: imageData
                     })
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 
                 const result = await response.json();
                 if (result.success) {
@@ -612,7 +635,7 @@ if ($stmt->rowCount() > 0) {
                     icon: 'error'
                 });
                 clockInBtn.disabled = false;
-                clockInBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Clock In';
+                clockInBtn.innerHTML = '<i class="fas fa-sign-in-alt me-2"></i> Clock In';
             }
         });
     }
@@ -631,19 +654,20 @@ if ($stmt->rowCount() > 0) {
             }
 
             const result = await Swal.fire({
-                title: 'Clock Out',
+                title: 'Confirm Clock Out',
                 text: 'Are you sure you want to clock out?',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: 'Yes, Clock Out',
-                cancelButtonText: 'Cancel'
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#e74a3b'
             });
 
             if (result.isConfirmed) {
                 try {
                     // Show loading state
                     clockOutBtn.disabled = true;
-                    clockOutBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
+                    clockOutBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...';
 
                     const response = await fetch('../../api/attendance/clock-out.php', {
                         method: 'POST',
@@ -656,6 +680,10 @@ if ($stmt->rowCount() > 0) {
                             longitude: currentLocation.lng
                         })
                     });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
                     
                     const result = await response.json();
                     if (result.success) {
@@ -677,7 +705,7 @@ if ($stmt->rowCount() > 0) {
                         icon: 'error'
                     });
                     clockOutBtn.disabled = false;
-                    clockOutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Clock Out';
+                    clockOutBtn.innerHTML = '<i class="fas fa-sign-out-alt me-2"></i> Clock Out';
                 }
             }
         });

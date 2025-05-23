@@ -147,13 +147,14 @@ if (!isset($_SESSION['last_login_updated'])) {
     $_SESSION['last_login_updated'] = true;
 }
 
-
+// Set timezone to Philippines
+date_default_timezone_set('Asia/Manila');
 
 // Prevent access to time tracking outside work hours (optional)
 if (basename($_SERVER['PHP_SELF']) === 'record.php') {
     $currentHour = date('H');
     if ($currentHour < 6 || $currentHour > 20) { // 6AM to 8PM only
-        $_SESSION['error'] = "Time tracking only available during work hours";
+        $_SESSION['error'] = "Time tracking only available during work hours (6:00 AM - 8:00 PM Philippine Time)";
         header("Location: ../dashboard.php");
         exit();
     }

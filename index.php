@@ -193,7 +193,10 @@ if (session_status() === PHP_SESSION_NONE) {
                         <a class="nav-link" href="#contact">Contact</a>
                     </li>
                     <li class="nav-item ms-lg-3">
-                        <a class="btn btn-outline-primary" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a>
+                        <a class="btn btn-outline-primary me-2" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-primary" href="auth/register.php">Register</a>
                     </li>
                 </ul>
             </div>
@@ -213,7 +216,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     </div>
                 </div>
                 <div class="col-lg-6 d-none d-lg-block">
-                    <img src="https://via.placeholder.com/600x400" alt="Dashboard Preview" class="img-fluid rounded shadow screenshot">
+                    <img src="assets/pictures/dashboard.png" alt="Dashboard Preview" class="img-fluid rounded shadow screenshot">
                 </div>
             </div>
         </div>
