@@ -78,6 +78,8 @@ CREATE TABLE attendance_records (
     ip_address VARCHAR(45),
     device_info VARCHAR(255),
     photo_path VARCHAR(255),
+    latitude DECIMAL(10,8) NULL,
+    longitude DECIMAL(11,8) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,

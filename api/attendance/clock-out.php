@@ -7,6 +7,10 @@ require_once '../../config/pusher.php';
 $response = ['success' => false, 'error' => ''];
 
 try {
+    // Get JSON data
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
+
     // Validate employee
     $employeeId = $_SESSION['user_data']['employee_id'];
     
@@ -30,13 +34,20 @@ try {
     $interval = $timeIn->diff($timeOut);
     $totalHours = $interval->h + ($interval->i / 60);
 
-    // Update record
+    // Update record with location data
     $stmt = $conn->prepare("UPDATE attendance_records 
                           SET time_out = NOW(), 
                               total_hours = ?,
+                              clock_out_latitude = ?,
+                              clock_out_longitude = ?,
                               updated_at = NOW()
                           WHERE record_id = ?");
-    $stmt->execute([$totalHours, $record['record_id']]);
+    $stmt->execute([
+        $totalHours,
+        $data['latitude'] ?? null,
+        $data['longitude'] ?? null,
+        $record['record_id']
+    ]);
 
     // Log action
     $stmt = $conn->prepare("INSERT INTO audit_logs 

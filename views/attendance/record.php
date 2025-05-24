@@ -368,6 +368,7 @@ if ($stmt->rowCount() > 0) {
                                         <th>Clock In</th>
                                         <th>Clock Out</th>
                                         <th>Status</th>
+                                        <th>Location</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -392,6 +393,29 @@ if ($stmt->rowCount() > 0) {
                                             <span class="badge <?= $badgeClass ?> status-badge">
                                                 <?= $record['status'] ?>
                                             </span>
+                                        </td>
+                                        <td>
+                                            <?php if ($record['clock_in_latitude'] && $record['clock_in_longitude']): ?>
+                                                <div class="mb-1">
+                                                    <a href="https://www.google.com/maps?q=<?= $record['clock_in_latitude'] ?>,<?= $record['clock_in_longitude'] ?>" 
+                                                       target="_blank" 
+                                                       class="text-primary text-decoration-none">
+                                                        <i class="fas fa-sign-in-alt"></i> Clock-in Location
+                                                    </a>
+                                                </div>
+                                            <?php endif; ?>
+                                            <?php if ($record['clock_out_latitude'] && $record['clock_out_longitude']): ?>
+                                                <div>
+                                                    <a href="https://www.google.com/maps?q=<?= $record['clock_out_latitude'] ?>,<?= $record['clock_out_longitude'] ?>" 
+                                                       target="_blank" 
+                                                       class="text-primary text-decoration-none">
+                                                        <i class="fas fa-sign-out-alt"></i> Clock-out Location
+                                                    </a>
+                                                </div>
+                                            <?php endif; ?>
+                                            <?php if (!$record['clock_in_latitude'] && !$record['clock_out_latitude']): ?>
+                                                <span class="text-muted">No location data</span>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                     <?php endwhile; ?>

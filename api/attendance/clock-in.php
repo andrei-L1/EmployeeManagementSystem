@@ -60,14 +60,17 @@ try {
 
     // Insert record with photo path
     $stmt = $conn->prepare("INSERT INTO attendance_records 
-                          (employee_id, date, time_in, status, ip_address, device_info, photo_path)
-                          VALUES (?, CURDATE(), NOW(), ?, ?, ?, ?)");
+                          (employee_id, date, time_in, status, ip_address, device_info, photo_path, 
+                           clock_in_latitude, clock_in_longitude)
+                          VALUES (?, CURDATE(), NOW(), ?, ?, ?, ?, ?, ?)");
     $stmt->execute([
         $employeeId,
         $status,
         $_SERVER['REMOTE_ADDR'],
         $_SERVER['HTTP_USER_AGENT'],
-        $photoPath
+        $photoPath,
+        $data['latitude'] ?? null,
+        $data['longitude'] ?? null
     ]);
 
     $recordId = $conn->lastInsertId();

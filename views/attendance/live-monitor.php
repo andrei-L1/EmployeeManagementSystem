@@ -26,7 +26,11 @@ $stmt = $conn->prepare("
         ar.time_out,
         ar.status,
         ar.date,
-        ar.photo_path
+        ar.photo_path,
+        ar.clock_in_latitude,
+        ar.clock_in_longitude,
+        ar.clock_out_latitude,
+        ar.clock_out_longitude
     FROM employees e
     LEFT JOIN departments d ON e.department_id = d.department_id
     LEFT JOIN positions p ON e.position_id = p.position_id
@@ -176,9 +180,27 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <div class="time-display">
                                         <?php if ($employee['time_in']): ?>
                                             <div>In: <?= date('h:i A', strtotime($employee['time_in'])) ?></div>
+                                            <?php if ($employee['clock_in_latitude'] && $employee['clock_in_longitude']): ?>
+                                                <div class="mt-1">
+                                                    <a href="https://www.google.com/maps?q=<?= $employee['clock_in_latitude'] ?>,<?= $employee['clock_in_longitude'] ?>" 
+                                                       target="_blank" 
+                                                       class="text-primary text-decoration-none">
+                                                        <i class="fas fa-map-marker-alt"></i> Clock-in Location
+                                                    </a>
+                                                </div>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                         <?php if ($employee['time_out']): ?>
                                             <div>Out: <?= date('h:i A', strtotime($employee['time_out'])) ?></div>
+                                            <?php if ($employee['clock_out_latitude'] && $employee['clock_out_longitude']): ?>
+                                                <div class="mt-1">
+                                                    <a href="https://www.google.com/maps?q=<?= $employee['clock_out_latitude'] ?>,<?= $employee['clock_out_longitude'] ?>" 
+                                                       target="_blank" 
+                                                       class="text-primary text-decoration-none">
+                                                        <i class="fas fa-map-marker-alt"></i> Clock-out Location
+                                                    </a>
+                                                </div>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                     <?php

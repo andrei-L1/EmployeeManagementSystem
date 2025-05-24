@@ -44,12 +44,18 @@ if (hasRole('Manager') && $employee['department_id'] !== $_SESSION['user_data'][
 
 // Get attendance records for the selected month
 $stmt = $conn->prepare("
-    SELECT * FROM attendance_records 
-    WHERE employee_id = ? 
-    AND MONTH(date) = ? 
-    AND YEAR(date) = ?
-    AND deleted_at IS NULL 
-    ORDER BY date ASC
+    SELECT ar.*, 
+           e.first_name, e.last_name, e.employee_id,
+           d.department_name, p.position_name
+    FROM attendance_records ar
+    LEFT JOIN employees e ON ar.employee_id = e.employee_id
+    LEFT JOIN departments d ON e.department_id = d.department_id
+    LEFT JOIN positions p ON e.position_id = p.position_id
+    WHERE ar.employee_id = ? 
+    AND MONTH(ar.date) = ? 
+    AND YEAR(ar.date) = ?
+    AND ar.deleted_at IS NULL 
+    ORDER BY ar.date ASC
 ");
 $stmt->execute([$employeeId, $month, $year]);
 $attendanceRecords = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -267,6 +273,8 @@ $years = range($currentYear - 2, $currentYear);
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Out</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Photo</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock-in Location</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock-out Location</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
                                     </tr>
                                 </thead>
@@ -309,6 +317,28 @@ $years = range($currentYear - 2, $currentYear);
                                                     <?php endif; ?>
                                                 <?php else: ?>
                                                     <span class="text-gray-400">No photo</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-500">
+                                                <?php if ($record['clock_in_latitude'] && $record['clock_in_longitude']): ?>
+                                                    <a href="https://www.google.com/maps?q=<?= $record['clock_in_latitude'] ?>,<?= $record['clock_in_longitude'] ?>" 
+                                                       target="_blank" 
+                                                       class="text-primary hover:text-blue-700">
+                                                        <i class="fas fa-map-marker-alt"></i> View Location
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span class="text-gray-400">No location data</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-500">
+                                                <?php if ($record['clock_out_latitude'] && $record['clock_out_longitude']): ?>
+                                                    <a href="https://www.google.com/maps?q=<?= $record['clock_out_latitude'] ?>,<?= $record['clock_out_longitude'] ?>" 
+                                                       target="_blank" 
+                                                       class="text-primary hover:text-blue-700">
+                                                        <i class="fas fa-map-marker-alt"></i> View Location
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span class="text-gray-400">No location data</span>
                                                 <?php endif; ?>
                                             </td>
                                             <td class="px-6 py-4 text-sm text-gray-500">
