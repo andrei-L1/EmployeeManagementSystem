@@ -75,7 +75,7 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </a>
             </div>
 
-            <form id="addEmployeeForm" class="needs-validation" novalidate>
+            <form id="addEmployeeForm" class="needs-validation" novalidate method="POST" enctype="multipart/form-data">
                 <!-- Personal Information -->
                 <div class="form-section">
                     <div class="form-section-header">
@@ -85,15 +85,21 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label required-field">First Name</label>
-                                <input type="text" class="form-control" name="first_name" required>
+                                <input type="text" class="form-control" name="first_name" required maxlength="50">
+                                <div class="invalid-feedback">
+                                    First name is required.
+                                </div>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Middle Name</label>
-                                <input type="text" class="form-control" name="middle_name">
+                                <input type="text" class="form-control" name="middle_name" maxlength="50">
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label required-field">Last Name</label>
-                                <input type="text" class="form-control" name="last_name" required>
+                                <input type="text" class="form-control" name="last_name" required maxlength="50">
+                                <div class="invalid-feedback">
+                                    Last name is required.
+                                </div>
                             </div>
                         </div>
                         
@@ -101,10 +107,16 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="col-md-6 mb-3">
                                 <label class="form-label required-field">Email</label>
                                 <input type="email" class="form-control" name="email" required>
+                                <div class="invalid-feedback">
+                                    Please enter a valid email address.
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label required-field">Contact Number</label>
                                 <input type="tel" class="form-control" name="contact_number" required>
+                                <div class="invalid-feedback">
+                                    Please enter contact number.
+                                </div>
                             </div>
                         </div>
                         
@@ -112,6 +124,9 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="col-md-6 mb-3">
                                 <label class="form-label required-field">Birth Date</label>
                                 <input type="date" class="form-control datepicker" name="birth_date" required>
+                                <div class="invalid-feedback">
+                                    Please select birth date.
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label required-field">Gender</label>
@@ -121,12 +136,18 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <option value="Female">Female</option>
                                     <option value="Other">Other</option>
                                 </select>
+                                <div class="invalid-feedback">
+                                    Please select gender.
+                                </div>
                             </div>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label required-field">Address</label>
                             <textarea class="form-control" name="address" rows="3" required></textarea>
+                            <div class="invalid-feedback">
+                                Please enter address.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -143,22 +164,28 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <select class="form-select" name="department_id" required>
                                     <option value="">Select Department</option>
                                     <?php foreach ($departments as $dept): ?>
-                                    <option value="<?= $dept['department_id'] ?>">
+                                    <option value="<?= htmlspecialchars($dept['department_id']) ?>">
                                         <?= htmlspecialchars($dept['department_name']) ?>
                                     </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <div class="invalid-feedback">
+                                    Department is required.
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label required-field">Position</label>
                                 <select class="form-select" name="position_id" required>
                                     <option value="">Select Position</option>
                                     <?php foreach ($positions as $pos): ?>
-                                    <option value="<?= $pos['position_id'] ?>">
-                                        <?= htmlspecialchars($pos['position_name']) ?>
+                                    <option value="<?= htmlspecialchars($pos['position_id']) ?>" data-salary="<?= htmlspecialchars($pos['base_salary']) ?>">
+                                        <?= htmlspecialchars($pos['position_name']) ?> (₱<?= number_format($pos['base_salary'], 2) ?>)
                                     </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <div class="invalid-feedback">
+                                    Position is required.
+                                </div>
                             </div>
                         </div>
                         
@@ -170,20 +197,25 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <option value="Probationary">Probationary</option>
                                     <option value="Regular">Regular</option>
                                     <option value="Contractual">Contractual</option>
+                                    <option value="Resigned">Resigned</option>
+                                    <option value="Terminated">Terminated</option>
                                 </select>
+                                <div class="invalid-feedback">
+                                    Employment status is required.
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label required-field">Hire Date</label>
                                 <input type="date" class="form-control datepicker" name="hire_date" required>
+                                <div class="invalid-feedback">
+                                    Hire date is required.
+                                </div>
                             </div>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label required-field">Base Salary</label>
-                            <div class="input-group">
-                                <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" name="base_salary" step="0.01" required>
-                            </div>
+                            <label class="form-label">Profile Picture</label>
+                            <input type="file" class="form-control" name="profile_picture" accept="image/*">
                         </div>
                     </div>
                 </div>
@@ -198,10 +230,16 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="col-md-6 mb-3">
                                 <label class="form-label required-field">Username</label>
                                 <input type="text" class="form-control" name="username" required>
+                                <div class="invalid-feedback">
+                                    Please enter username.
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label required-field">Password</label>
                                 <input type="password" class="form-control" name="password" required>
+                                <div class="invalid-feedback">
+                                    Please enter password.
+                                </div>
                             </div>
                         </div>
                         
@@ -216,6 +254,9 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <option value="4">Manager</option>
                                 <?php endif; ?>
                             </select>
+                            <div class="invalid-feedback">
+                                Please select role.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -245,15 +286,51 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         document.getElementById('addEmployeeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            if (!e.target.checkValidity()) {
-                e.target.classList.add('was-validated');
+            const form = e.target;
+            if (!form.checkValidity()) {
+                e.stopPropagation();
+                form.classList.add('was-validated');
+                
+                // Find the first invalid field and focus it
+                const firstInvalid = form.querySelector(':invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                }
+                
                 return;
             }
             
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
+            // Disable submit button to prevent double submission
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
             
             try {
+                const formData = new FormData(form);
+                const data = {};
+                
+                // Convert FormData to JSON object
+                for (const [key, value] of formData.entries()) {
+                    data[key] = value;
+                }
+                
+                // Get base salary from selected position
+                const positionSelect = form.querySelector('select[name="position_id"]');
+                const selectedOption = positionSelect.options[positionSelect.selectedIndex];
+                data.base_salary = selectedOption.dataset.salary;
+                
+                // Validate required fields
+                const requiredFields = [
+                    'first_name', 'last_name', 'email', 'contact_number', 'birth_date',
+                    'gender', 'address', 'department_id', 'position_id', 'employment_status',
+                    'hire_date', 'username', 'password', 'role_id'
+                ];
+                
+                for (const field of requiredFields) {
+                    if (!data[field]) {
+                        throw new Error(`Missing required field: ${field}`);
+                    }
+                }
+                
                 const response = await fetch('../../api/employees/add.php', {
                     method: 'POST',
                     headers: {
@@ -272,7 +349,7 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     });
                     window.location.href = 'list.php';
                 } else {
-                    throw new Error(result.error);
+                    throw new Error(result.error || 'Failed to add employee');
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -281,6 +358,9 @@ $leaveTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     text: error.message || 'Failed to add employee',
                     icon: 'error'
                 });
+            } finally {
+                // Re-enable submit button
+                submitBtn.disabled = false;
             }
         });
     </script>

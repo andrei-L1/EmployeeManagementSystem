@@ -18,7 +18,7 @@ try {
     $requiredFields = [
         'first_name', 'last_name', 'email', 'contact_number', 'birth_date',
         'gender', 'address', 'department_id', 'position_id', 'employment_status',
-        'hire_date', 'base_salary', 'username', 'password', 'role_id'
+        'hire_date', 'username', 'password', 'role_id'
     ];
     
     foreach ($requiredFields as $field) {
@@ -52,7 +52,7 @@ try {
     try {
         // Create user account
         $stmt = $conn->prepare("
-            INSERT INTO users (username, email, password, role_id, is_active, created_at)
+            INSERT INTO users (username, email, password_hash, role_id, is_active, created_at)
             VALUES (?, ?, ?, ?, TRUE, NOW())
         ");
         $stmt->execute([
@@ -67,18 +67,17 @@ try {
         // Create employee record
         $stmt = $conn->prepare("
             INSERT INTO employees (
-                user_id, first_name, middle_name, last_name, email,
+                user_id, first_name, middle_name, last_name,
                 contact_number, birth_date, gender, address,
                 department_id, position_id, employment_status,
-                hire_date, base_salary, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                hire_date, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
         $stmt->execute([
             $userId,
             $data['first_name'],
             $data['middle_name'] ?? null,
             $data['last_name'],
-            $data['email'],
             $data['contact_number'],
             $data['birth_date'],
             $data['gender'],
@@ -86,8 +85,7 @@ try {
             $data['department_id'],
             $data['position_id'],
             $data['employment_status'],
-            $data['hire_date'],
-            $data['base_salary']
+            $data['hire_date']
         ]);
         
         $employeeId = $conn->lastInsertId();

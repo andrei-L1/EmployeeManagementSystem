@@ -495,6 +495,7 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
     channel.bind('clock-in-event', function(data) {
         updateEmployeeCard(data.employee_id, data, true);
         updateStats();
+        updateTrendData(data.time_in);
     });
 
     // Listen for clock-out events
@@ -502,6 +503,14 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
         updateEmployeeCard(data.employee_id, data, false);
         updateStats();
     });
+
+    // Update trend data for a specific time
+    function updateTrendData(timeIn) {
+        const hour = new Date(timeIn).getHours();
+        const trendChart = window.charts.trendChart;
+        trendChart.data.datasets[0].data[hour]++;
+        trendChart.update();
+    }
 
     // Initial stats update
     updateStats();
