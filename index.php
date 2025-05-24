@@ -414,55 +414,16 @@ if (session_status() === PHP_SESSION_NONE) {
 
 
     <!-- Footer -->
-    <footer id="contact" class="footer">
+    <footer class="py-4 mt-5">
         <div class="container">
             <div class="row">
-                <div class="col-lg-4 mb-4">
-                    <h5 class="mb-4"><i class="fas fa-user-clock me-2"></i>EmployeeTrack Pro</h5>
-                    <p>Modern workforce management solution designed to streamline your HR processes and improve productivity.</p>
-                    <div class="mt-4">
-                        <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" class="text-white"><i class="fab fa-instagram"></i></a>
-                    </div>
+                <div class="col-md-6">
+                    <h5 class="text-white mb-3">EmployeeTrack Pro</h5>
+                    <p class="text-white-50 mb-0">A comprehensive employee management system designed to streamline HR processes and enhance workplace efficiency.</p>
                 </div>
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <h5 class="mb-4">Product</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="#" class="text-white">Features</a></li>
-                        <li class="mb-2"><a href="#" class="text-white">Pricing</a></li>
-                        <li class="mb-2"><a href="#" class="text-white">Screenshots</a></li>
-                        <li class="mb-2"><a href="#" class="text-white">Demo</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <h5 class="mb-4">Company</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="#" class="text-white">About Us</a></li>
-                        <li class="mb-2"><a href="#" class="text-white">Careers</a></li>
-                        <li class="mb-2"><a href="#" class="text-white">Blog</a></li>
-                        <li class="mb-2"><a href="#" class="text-white">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-4 mb-4">
-                    <h5 class="mb-4">Contact Us</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-3"><i class="fas fa-map-marker-alt me-2"></i> 123 Business Ave, Suite 100, San Francisco, CA 94107</li>
-                        <li class="mb-3"><i class="fas fa-phone me-2"></i> +1 (555) 123-4567</li>
-                        <li class="mb-3"><i class="fas fa-envelope me-2"></i> info@employeetrackpro.com</li>
-                    </ul>
-                </div>
-            </div>
-            <hr class="mt-4 mb-4" style="border-color: rgba(255,255,255,0.1);">
-            <div class="row">
-                <div class="col-md-6 text-center text-md-start">
-                    <p class="mb-0">© 2023 EmployeeTrack Pro. All rights reserved.</p>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <a href="#" class="text-white me-3">Privacy Policy</a>
-                    <a href="#" class="text-white me-3">Terms of Service</a>
-                    <a href="#" class="text-white">Cookie Policy</a>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-white-50 mb-0">Developed with ❤️ by <a href="https://github.com/andrei-L1" target="_blank" class="text-white text-decoration-none">Jed Andrei Lonsania</a></p>
+                    <p class="text-white-50 mb-0">© <?= date('Y') ?> All rights reserved</p>
                 </div>
             </div>
         </div>
