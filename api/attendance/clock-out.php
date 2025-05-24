@@ -73,7 +73,9 @@ try {
         'employee_id' => $employeeId,
         'employee_name' => $employee['first_name'] . ' ' . $employee['last_name'],
         'time_out' => date('Y-m-d H:i:s'),
-        'total_hours' => $totalHours
+        'total_hours' => $totalHours,
+        'clock_out_latitude' => $data['latitude'] ?? null,
+        'clock_out_longitude' => $data['longitude'] ?? null
     ];
     $pusher->trigger('attendance-channel', 'clock-out-event', $data);
 

@@ -1,6 +1,7 @@
 <?php
 require_once '../../auth/check_login.php';
 require_once(__DIR__ . '/../../config/dbcon.php');
+require_once(__DIR__ . '/../../config/maps.php');
 
 // Check current attendance status
 $todayRecord = null;
@@ -146,6 +147,45 @@ if ($stmt->rowCount() > 0) {
             border-left: 0.5rem solid var(--success);
         }
         
+        .location-preview {
+            height: 200px;
+            border-radius: 1rem;
+            margin-top: 1rem;
+            overflow: hidden;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .location-preview.active {
+            display: block;
+        }
+
+        #locationMap {
+            width: 100%;
+            height: 100%;
+            border-radius: 1rem;
+        }
+
+        /* Leaflet map custom styles */
+        .leaflet-container {
+            border-radius: 1rem;
+        }
+
+        .leaflet-control-zoom {
+            border: none !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+        }
+
+        .leaflet-control-zoom a {
+            background-color: white !important;
+            color: #333 !important;
+            border: none !important;
+        }
+
+        .leaflet-control-zoom a:hover {
+            background-color: #f8f9fc !important;
+        }
+
         .location-status {
             background-color: #f8f9fc;
             border-radius: 1rem;
@@ -153,15 +193,18 @@ if ($stmt->rowCount() > 0) {
             margin-top: 2rem;
             border: 1px solid #e3e6f0;
             font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        
+
         .location-status i {
             font-size: 1.25rem;
             color: var(--primary);
+        }
+
+        .location-details {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
         }
         
         .spinner-border {
@@ -278,6 +321,39 @@ if ($stmt->rowCount() > 0) {
             }
         }
     </style>
+    <!-- Add Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script>
+        // Initialize Google Maps API
+        function initMap() {
+            if (typeof google === 'undefined') {
+                console.error('Google Maps API failed to load');
+                return;
+            }
+
+            const mapElement = document.getElementById('locationMap');
+            if (!mapElement) return;
+
+            const map = new google.maps.Map(mapElement, {
+                center: { lat: 0, lng: 0 },
+                zoom: 15,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false
+            });
+
+            const marker = new google.maps.marker.AdvancedMarkerElement({
+                map: map,
+                position: { lat: 0, lng: 0 },
+                title: 'Your Location'
+            });
+
+            window.attendanceMap = { map, marker };
+        }
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=<?php echo GOOGLE_MAPS_API_KEY; ?>&callback=initMap&libraries=marker">
+    </script>
 </head>
 <body>
 <?php include '../../includes/sidebar.php'; ?>
@@ -348,6 +424,10 @@ if ($stmt->rowCount() > 0) {
                         <div class="location-status text-start">
                             <i class="fas fa-map-marker-alt text-primary me-2"></i>
                             <span id="locationText">Acquiring location...</span>
+                            <div class="location-details" id="locationDetails"></div>
+                            <div class="location-preview" id="locationPreview">
+                                <div id="locationMap"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -432,6 +512,7 @@ if ($stmt->rowCount() > 0) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     // Initialize Pusher
     const pusher = new Pusher('10ac21fee8c24f99545b', {
@@ -474,42 +555,92 @@ if ($stmt->rowCount() > 0) {
         Notification.requestPermission();
     }
 
-    // Geolocation
+    // Geolocation with map preview
     let currentLocation = null;
+    let map = null;
+    let marker = null;
     
+    function initMap() {
+        if (map) return; // Map already initialized
+
+        map = L.map('locationMap').setView([0, 0], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+    }
+
     function updateLocationStatus(status, error = null) {
         const locationText = document.getElementById('locationText');
+        const locationDetails = document.getElementById('locationDetails');
+        const locationPreview = document.getElementById('locationPreview');
+        
         if (error) {
             locationText.innerHTML = `<span class="text-danger">${error}</span>`;
+            locationPreview.classList.remove('active');
         } else {
             locationText.textContent = status;
+            if (currentLocation) {
+                locationDetails.textContent = `Latitude: ${currentLocation.lat.toFixed(6)}, Longitude: ${currentLocation.lng.toFixed(6)}`;
+                locationPreview.classList.add('active');
+                
+                // Initialize map if not already done
+                if (!map) {
+                    initMap();
+                }
+
+                // Update map view and marker
+                map.setView([currentLocation.lat, currentLocation.lng], 15);
+                if (marker) {
+                    marker.setLatLng([currentLocation.lat, currentLocation.lng]);
+                } else {
+                    marker = L.marker([currentLocation.lat, currentLocation.lng]).addTo(map);
+                }
+
+                // FIX: Invalidate map size after showing
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 200);
+            }
         }
     }
 
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            currentLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
-            updateLocationStatus('Location captured');
-        },
-        (error) => {
-            console.error("Geolocation error:", error);
-            let errorMessage = 'Location access denied';
-            if (error.code === error.TIMEOUT) {
-                errorMessage = 'Location request timed out';
-            } else if (error.code === error.POSITION_UNAVAILABLE) {
-                errorMessage = 'Location information unavailable';
+    // Watch for location changes
+    if ("geolocation" in navigator) {
+        const watchId = navigator.geolocation.watchPosition(
+            (position) => {
+                currentLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                updateLocationStatus('Location captured');
+            },
+            (error) => {
+                console.error("Geolocation error:", error);
+                let errorMessage = 'Location access denied';
+                if (error.code === error.TIMEOUT) {
+                    errorMessage = 'Location request timed out';
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    errorMessage = 'Location information unavailable';
+                }
+                updateLocationStatus(null, errorMessage);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
             }
-            updateLocationStatus(null, errorMessage);
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-        }
-    );
+        );
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            navigator.geolocation.clearWatch(watchId);
+            if (map) {
+                map.remove();
+            }
+        });
+    } else {
+        updateLocationStatus(null, 'Geolocation is not supported by your browser');
+    }
 
     // Camera setup for clock in
     const video = document.getElementById('video');

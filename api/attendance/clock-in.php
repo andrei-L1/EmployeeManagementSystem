@@ -99,7 +99,10 @@ try {
         'employee_id' => $employeeId,
         'employee_name' => $employee['first_name'] . ' ' . $employee['last_name'],
         'time_in' => date('Y-m-d H:i:s'),
-        'status' => $status
+        'status' => $status,
+        'photo_path' => $photoPath,
+        'clock_in_latitude' => $data['latitude'] ?? null,
+        'clock_in_longitude' => $data['longitude'] ?? null
     ];
     $pusher->trigger('attendance-channel', 'clock-in-event', $data);
 

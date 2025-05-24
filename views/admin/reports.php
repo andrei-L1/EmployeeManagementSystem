@@ -340,10 +340,10 @@ switch($reportType) {
                         </select>
                     </div>
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="generateReport">
                             <i class="fas fa-sync-alt me-2"></i>Generate Report
                         </button>
-                        <button type="button" class="btn btn-success" onclick="exportReport()">
+                        <button type="button" class="btn btn-success" onclick="exportToExcel()">
                             <i class="fas fa-file-excel me-2"></i>Export to Excel
                         </button>
                     </div>
@@ -539,17 +539,67 @@ switch($reportType) {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <script>
-    function exportReport() {
-        // Add export functionality here
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'info',
-            title: 'Export functionality will be implemented soon',
-            showConfirmButton: false,
-            timer: 3000
+    function exportToExcel() {
+        // Get the table data based on report type
+        let tableData = [];
+        let headers = [];
+        let fileName = '';
+        
+        <?php if($reportType === 'employee_stats'): ?>
+            // Employee Statistics Export
+            headers = ['Department', 'Count'];
+            tableData = <?php echo json_encode($reportData['by_department']); ?>;
+            
+            // Add position data
+            let positionData = <?php echo json_encode($reportData['by_position']); ?>;
+            tableData = tableData.concat(positionData);
+            fileName = 'employee_statistics';
+            
+        <?php elseif($reportType === 'attendance'): ?>
+            // Attendance Report Export
+            headers = ['Status', 'Count'];
+            tableData = [
+                { status: 'Present', count: <?php echo $reportData['summary']['present']; ?> },
+                { status: 'Late', count: <?php echo $reportData['summary']['late']; ?> },
+                { status: 'Absent', count: <?php echo $reportData['summary']['absent']; ?> },
+                { status: 'On Leave', count: <?php echo $reportData['summary']['on_leave']; ?> }
+            ];
+            fileName = 'attendance_report';
+            
+        <?php elseif($reportType === 'leave'): ?>
+            // Leave Report Export
+            headers = ['Leave Type', 'Total Requests', 'Approved', 'Rejected', 'Pending'];
+            tableData = <?php echo json_encode($reportData['summary']); ?>;
+            fileName = 'leave_report';
+        <?php endif; ?>
+
+        // Convert data to CSV format
+        let csvContent = headers.join(',') + '\n';
+        
+        tableData.forEach(row => {
+            let values = Object.values(row);
+            csvContent += values.join(',') + '\n';
         });
+
+        // Create and download the file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${fileName}_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
     }
+
+    // Add loading state to generate report button
+    document.getElementById('generateReport').addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating...';
+        
+        // Re-enable after form submission
+        setTimeout(() => {
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Generate Report';
+        }, 1000);
+    });
     </script>
 </body>
 </html>

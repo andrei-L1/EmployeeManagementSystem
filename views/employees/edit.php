@@ -146,7 +146,7 @@ $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <div class="form-section text-center">
                     <div class="form-section-body">
                         <div class="profile-picture-container">
-                            <img src="<?= $employee['profile_picture'] ?? '../../assets/img/default-profile.jpg' ?>" 
+                            <img src="<?= $employee['profile_picture'] ?? '../../assets/img/default-profile.svg' ?>" 
                                  alt="Profile Picture" 
                                  class="profile-picture"
                                  id="profilePreview">
