@@ -138,6 +138,9 @@ if ($employeeData) {
     );
     $_SESSION['user_data']['position'] = $employeeData['position_name'];
     $_SESSION['user_data']['department'] = $employeeData['department_name'];
+} else {
+    // For admin users, set a default full name from username
+    $_SESSION['user_data']['full_name'] = $_SESSION['user_data']['username'];
 }
 
 // Update last login time (once per session)
@@ -160,14 +163,16 @@ if (basename($_SERVER['PHP_SELF']) === 'record.php') {
     }
 }
 
-// Prevent multiple clock-ins
-$stmt = $conn->prepare("SELECT * FROM attendance_records 
-                      WHERE employee_id = ? 
-                      AND date = CURDATE() 
-                      AND time_out IS NULL");
-$stmt->execute([$_SESSION['user_data']['employee_id']]);
-if ($stmt->rowCount() > 0 && basename($_SERVER['PHP_SELF']) === 'clock-in.php') {
-    header("Location: ../attendance/record.php");
-    exit();
+// Prevent multiple clock-ins - only for non-admin users
+if (!hasRole('Admin') && isset($_SESSION['user_data']['employee_id'])) {
+    $stmt = $conn->prepare("SELECT * FROM attendance_records 
+                          WHERE employee_id = ? 
+                          AND date = CURDATE() 
+                          AND time_out IS NULL");
+    $stmt->execute([$_SESSION['user_data']['employee_id']]);
+    if ($stmt->rowCount() > 0 && basename($_SERVER['PHP_SELF']) === 'clock-in.php') {
+        header("Location: ../attendance/record.php");
+        exit();
+    }
 }
 ?>

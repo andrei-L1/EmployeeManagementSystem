@@ -28,6 +28,31 @@ if (hasRole('Admin')) {
     $stmt->execute();
     $totalDepartments = $stmt->fetchColumn();
 
+    // Additional admin-specific stats
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM users WHERE role_id = (SELECT role_id FROM roles WHERE role_name = 'Admin') AND deleted_at IS NULL");
+    $stmt->execute();
+    $totalAdmins = $stmt->fetchColumn();
+
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM audit_logs WHERE DATE(action_timestamp) = ?");
+    $stmt->execute([$today]);
+    $todayAuditLogs = $stmt->fetchColumn();
+
+    $stmt = $conn->prepare("SELECT COUNT(*) FROM users WHERE last_login >= DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+    $stmt->execute();
+    $activeUsers24h = $stmt->fetchColumn();
+
+    // Get recent system activities
+    $stmt = $conn->prepare("
+        SELECT al.*, u.username 
+        FROM audit_logs al 
+        LEFT JOIN users u ON al.user_id = u.user_id 
+        WHERE al.action_timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+        ORDER BY al.action_timestamp DESC 
+        LIMIT 5
+    ");
+    $stmt->execute();
+    $recentActivities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 } elseif (hasRole('HR')) {
     // HR sees similar to admin but with some restrictions
     $stmt = $conn->prepare("SELECT COUNT(*) FROM employees WHERE deleted_at IS NULL");
@@ -673,24 +698,90 @@ foreach ($results as $row) {
                 <div class="col-lg-8">
                     <!-- Role-Specific Content -->
                     <?php if (hasRole('Admin')): ?>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="text-muted mb-0">Total Employees</h6>
+                                    <div class="stat-icon bg-primary">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                </div>
+                                <h3 class="mb-2"><?= $totalEmployees ?></h3>
+                                <div class="text-success small">
+                                    <i class="fas fa-arrow-up"></i> 3.2% from last month
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="text-muted mb-0">Active Users (24h)</h6>
+                                    <div class="stat-icon bg-success">
+                                        <i class="fas fa-user-clock"></i>
+                                    </div>
+                                </div>
+                                <h3 class="mb-2"><?= $activeUsers24h ?></h3>
+                                <div class="text-success small">
+                                    <i class="fas fa-arrow-up"></i> 5.1% from yesterday
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="text-muted mb-0">Today's Audit Logs</h6>
+                                    <div class="stat-icon bg-info">
+                                        <i class="fas fa-history"></i>
+                                    </div>
+                                </div>
+                                <h3 class="mb-2"><?= $todayAuditLogs ?></h3>
+                                <div class="text-warning small">
+                                    <i class="fas fa-exclamation-circle"></i> Monitor activity
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="text-muted mb-0">System Admins</h6>
+                                    <div class="stat-icon bg-warning">
+                                        <i class="fas fa-user-shield"></i>
+                                    </div>
+                                </div>
+                                <h3 class="mb-2"><?= $totalAdmins ?></h3>
+                                <div class="text-info small">
+                                    <i class="fas fa-info-circle"></i> Active administrators
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Overview Card -->
                     <div class="chart-card mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h5 class="card-title mb-0"><i class="fas fa-tachometer-alt text-primary me-2"></i>System Overview</h5>
-                            <a href="admin/audit-logs.php" class="btn btn-primary btn-sm">View All</a>
+                            <div class="btn-group">
+                                <a href="admin/audit-logs.php" class="btn btn-primary btn-sm">View All Logs</a>
+                                <a href="admin/system-health.php" class="btn btn-outline-primary btn-sm">System Health</a>
+                            </div>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <a href="admin/audit-logs.php" class="quick-action d-block">
                                     <i class="fas fa-history text-primary mb-2" style="font-size: 1.5rem;"></i>
                                     <div class="quick-action-label">Audit Logs</div>
-                                    <small class="text-muted">14 new</small>
+                                    <small class="text-muted"><?= $todayAuditLogs ?> new today</small>
                                 </a>
                             </div>
                             <div class="col-md-6">
                                 <a href="admin/user-management.php" class="quick-action d-block">
                                     <i class="fas fa-user-cog text-primary mb-2" style="font-size: 1.5rem;"></i>
                                     <div class="quick-action-label">User Management</div>
-                                    <small class="text-muted">3 pending</small>
+                                    <small class="text-muted"><?= $activeUsers24h ?> active users</small>
                                 </a>
                             </div>
                             <div class="col-md-6">
@@ -704,8 +795,53 @@ foreach ($results as $row) {
                                 <a href="admin/settings.php" class="quick-action d-block">
                                     <i class="fas fa-cogs text-primary mb-2" style="font-size: 1.5rem;"></i>
                                     <div class="quick-action-label">System Settings</div>
+                                    <small class="text-muted">Configure system</small>
                                 </a>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent System Activities -->
+                    <div class="chart-card mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="card-title mb-0"><i class="fas fa-history text-primary me-2"></i>Recent System Activities</h5>
+                            <a href="admin/audit-logs.php" class="btn btn-primary btn-sm">View All</a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>User</th>
+                                        <th>Action</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($recentActivities as $activity): ?>
+                                    <tr>
+                                        <td><?= date('M j, g:i A', strtotime($activity['action_timestamp'])) ?></td>
+                                        <td><?= htmlspecialchars($activity['username'] ?? 'System') ?></td>
+                                        <td>
+                                            <span class="badge bg-<?= 
+                                                $activity['action'] === 'Error' ? 'danger' : 
+                                                ($activity['action'] === 'Update' ? 'warning' : 
+                                                ($activity['action'] === 'Delete' ? 'danger' : 
+                                                ($activity['action'] === 'Create' ? 'success' : 'info'))) 
+                                            ?>">
+                                                <?= htmlspecialchars($activity['action']) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                <?= htmlspecialchars($activity['table_affected']) ?>
+                                                <?= $activity['record_id'] ? ' (ID: ' . $activity['record_id'] . ')' : '' ?>
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                     <?php endif; ?>
@@ -802,6 +938,14 @@ foreach ($results as $row) {
                                 </a>
                             </div>
                             <?php endif; ?>
+
+                            <!-- Add Payslip Quick Action -->
+                            <div class="col-6">
+                                <a href="payroll/payslip.php" class="quick-action d-block">
+                                    <i class="fas fa-file-invoice-dollar text-primary mb-2" style="font-size: 1.5rem;"></i>
+                                    <div class="quick-action-label">View Payslips</div>
+                                </a>
+                            </div>
 
                             <?php if (hasRole('HR') || hasRole('Manager')): ?>
                             <div class="col-6">

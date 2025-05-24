@@ -94,7 +94,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch roles, positions, departments
-$roles = $conn->query("SELECT role_id, role_name FROM roles")->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $conn->prepare("SELECT role_id, role_name FROM roles WHERE role_name != 'Admin'");
+$stmt->execute();
+$roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $positions = $conn->query("SELECT position_id, position_name FROM positions")->fetchAll(PDO::FETCH_ASSOC);
 $departments = $conn->query("SELECT department_id, department_name FROM departments")->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -406,6 +408,7 @@ $departments = $conn->query("SELECT department_id, department_name FROM departme
                     <?php endforeach; ?>
                 </select>
                 <div class="invalid-feedback"><?= $errors['role_id'] ?? '' ?></div>
+                <small class="text-muted mt-1 d-block">Note: Admin accounts can only be created by existing administrators.</small>
             </div>
 
             <div class="d-flex justify-content-between mt-3">
@@ -444,10 +447,10 @@ $departments = $conn->query("SELECT department_id, department_name FROM departme
             </div>
 
             <div class="mb-2 input-icon">
-                <label for="middle_name" class="form-label">Middle Initial</label>
+                <label for="middle_name" class="form-label">Middle Name</label>
                 <i class="fas fa-user"></i>
                 <input type="text" id="middle_name" name="middle_name" class="form-control" 
-                    value="<?= htmlspecialchars($_POST['middle_name'] ?? '') ?>" maxlength="1" />
+                    value="<?= htmlspecialchars($_POST['middle_name'] ?? '') ?>" maxlength="30" />
             </div>
 
             <div class="row">
@@ -659,9 +662,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Middle name (middle initial): max 1 char, no digits
         if (input.id === 'middle_name' && val) {
-            if (val.length > 1) {
+            if (val.length < 1) {
                 input.classList.add('is-invalid');
-                if (feedback) feedback.textContent = 'Middle initial can only be 1 character.';
+                if (feedback) feedback.textContent = 'must be at least 2 characters..';
                 return false;
             }
             if (/\d/.test(val)) {
@@ -721,5 +724,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 </body>
-</html>
 </html>

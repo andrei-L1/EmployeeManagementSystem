@@ -266,6 +266,7 @@ $years = range($currentYear - 2, $currentYear);
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time In</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Out</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Photo</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
                                     </tr>
                                 </thead>
@@ -292,6 +293,24 @@ $years = range($currentYear - 2, $currentYear);
                                                     <?= $record['status'] ?>
                                                 </span>
                                             </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <?php if ($record['photo_path']): ?>
+                                                    <?php 
+                                                    $photoPath = '../../' . $record['photo_path'];
+                                                    $webPhotoPath = '/employeeYA/' . ltrim($record['photo_path'], '/');
+                                                    if (file_exists($photoPath)): 
+                                                    ?>
+                                                        <img src="<?= htmlspecialchars($webPhotoPath) ?>" 
+                                                             alt="Clock-in Photo" 
+                                                             class="w-16 h-16 object-cover rounded-lg cursor-pointer"
+                                                             onclick="showPhotoModal('<?= htmlspecialchars($webPhotoPath) ?>')">
+                                                    <?php else: ?>
+                                                        <span class="text-gray-400">Photo not found</span>
+                                                    <?php endif; ?>
+                                                <?php else: ?>
+                                                    <span class="text-gray-400">No photo</span>
+                                                <?php endif; ?>
+                                            </td>
                                             <td class="px-6 py-4 text-sm text-gray-500">
                                                 <?= $record['remarks'] ?? '-' ?>
                                             </td>
@@ -306,6 +325,50 @@ $years = range($currentYear - 2, $currentYear);
         </div>
     </div>
 
+    <!-- Add this before the closing body tag -->
+    <div id="photoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white p-4 rounded-lg max-w-2xl w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Clock-in Photo</h3>
+                <button onclick="closePhotoModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <img id="modalPhoto" src="" alt="Clock-in Photo" class="w-full h-auto rounded-lg">
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function showPhotoModal(photoPath) {
+        console.log('Modal photo path:', photoPath); // Debug output
+        const modal = document.getElementById('photoModal');
+        const modalPhoto = document.getElementById('modalPhoto');
+        modalPhoto.src = photoPath;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closePhotoModal() {
+        const modal = document.getElementById('photoModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('photoModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closePhotoModal();
+        }
+    });
+
+    // Add error handling for images
+    document.querySelectorAll('img').forEach(img => {
+        img.onerror = function() {
+            this.onerror = null;
+            this.src = '../../assets/img/no-image.png'; // Fallback image
+        };
+    });
+    </script>
 </body>
 </html> 

@@ -351,62 +351,25 @@ if (strpos($currentDir, '/views/employees') !== false ||
                 <span class="tooltip-text">User Management</span>
             </a>
         </li>
-        <?php endif; ?>
-        
-        <?php if (hasRole('HR') || hasRole('Manager')): ?>
         <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'list.php' ? 'active' : '' ?>" href="/employeeYA/views/employees/list.php">
-                <i class="fas fa-users"></i>
-                <span class="nav-link-text">Employees</span>
-                <span class="tooltip-text">Employees</span>
+            <a class="nav-link <?= $currentPage === 'audit-logs.php' ? 'active' : '' ?>" href="/employeeYA/views/admin/audit-logs.php">
+                <i class="fas fa-history"></i>
+                <span class="nav-link-text">Audit Logs</span>
+                <span class="tooltip-text">Audit Logs</span>
             </a>
         </li>
-        <?php endif; ?>
-        
-        <?php if (!hasRole('Admin')): ?>
-        <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'record.php' ? 'active' : '' ?>" href="/employeeYA/views/attendance/record.php">
-                <i class="fas fa-clipboard-check"></i>
-                <span class="nav-link-text">Attendance</span>
-                <span class="tooltip-text">Attendance</span>
-            </a>
-        </li>
-        <?php endif; ?>
-        
-        <?php if (hasRole('HR') || hasRole('Manager')): ?>
-        <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'live-monitor.php' ? 'active' : '' ?>" href="/employeeYA/views/attendance/live-monitor.php">
-                <i class="fas fa-desktop"></i>
-                <span class="nav-link-text">Live Monitor</span>
-                <span class="tooltip-text">Live Monitor</span>
-            </a>
-        </li>
-        <?php endif; ?>
-        
-        <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'request.php' ? 'active' : '' ?>" href="/employeeYA/views/leave/request.php">
-                <i class="fas fa-calendar-alt"></i>
-                <span class="nav-link-text">Leave</span>
-                <span class="tooltip-text">Leave</span>
-            </a>
-        </li>
-        
-        <?php if (hasRole('Admin') || hasRole('HR')): ?>
-        <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'process.php' ? 'active' : '' ?>" href="/employeeYA/views/payroll/process.php">
-                <i class="fas fa-money-bill-wave"></i>
-                <span class="nav-link-text">Payroll</span>
-                <span class="tooltip-text">Payroll</span>
-            </a>
-        </li>
-        <?php endif; ?>
-        
-        <?php if (hasRole('Admin')): ?>
         <li class="nav-item">
             <a class="nav-link <?= $currentPage === 'reports.php' ? 'active' : '' ?>" href="/employeeYA/views/admin/reports.php">
                 <i class="fas fa-chart-bar"></i>
                 <span class="nav-link-text">Reports</span>
                 <span class="tooltip-text">Reports</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link <?= $currentPage === 'system-health.php' ? 'active' : '' ?>" href="/employeeYA/views/admin/system-health.php">
+                <i class="fas fa-heartbeat"></i>
+                <span class="nav-link-text">System Health</span>
+                <span class="tooltip-text">System Health</span>
             </a>
         </li>
         <li class="nav-item">
@@ -416,6 +379,52 @@ if (strpos($currentDir, '/views/employees') !== false ||
                 <span class="tooltip-text">Settings</span>
             </a>
         </li>
+        <?php else: ?>
+            <?php if (hasRole('HR') || hasRole('Manager')): ?>
+            <li class="nav-item">
+                <a class="nav-link <?= $currentPage === 'list.php' ? 'active' : '' ?>" href="/employeeYA/views/employees/list.php">
+                    <i class="fas fa-users"></i>
+                    <span class="nav-link-text">Employees</span>
+                    <span class="tooltip-text">Employees</span>
+                </a>
+            </li>
+            <?php endif; ?>
+            
+            <li class="nav-item">
+                <a class="nav-link <?= $currentPage === 'record.php' ? 'active' : '' ?>" href="/employeeYA/views/attendance/record.php">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span class="nav-link-text">Attendance</span>
+                    <span class="tooltip-text">Attendance</span>
+                </a>
+            </li>
+            
+            <?php if (hasRole('HR') || hasRole('Manager')): ?>
+            <li class="nav-item">
+                <a class="nav-link <?= $currentPage === 'live-monitor.php' ? 'active' : '' ?>" href="/employeeYA/views/attendance/live-monitor.php">
+                    <i class="fas fa-desktop"></i>
+                    <span class="nav-link-text">Live Monitor</span>
+                    <span class="tooltip-text">Live Monitor</span>
+                </a>
+            </li>
+            <?php endif; ?>
+            
+            <li class="nav-item">
+                <a class="nav-link <?= $currentPage === 'request.php' ? 'active' : '' ?>" href="/employeeYA/views/leave/request.php">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span class="nav-link-text">Leave</span>
+                    <span class="tooltip-text">Leave</span>
+                </a>
+            </li>
+            
+            <?php if (hasRole('HR')): ?>
+            <li class="nav-item">
+                <a class="nav-link <?= $currentPage === 'process.php' ? 'active' : '' ?>" href="/employeeYA/views/payroll/process.php">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span class="nav-link-text">Payroll</span>
+                    <span class="tooltip-text">Payroll</span>
+                </a>
+            </li>
+            <?php endif; ?>
         <?php endif; ?>
     </ul>
     
@@ -423,7 +432,8 @@ if (strpos($currentDir, '/views/employees') !== false ||
     
     <ul class="nav flex-column px-1">
         <li class="nav-item">
-            <a class="nav-link <?= $currentPage === 'profile.php' ? 'active' : '' ?>" href="/employeeYA/views/profile.php">
+            <a class="nav-link <?= $currentPage === 'profile.php' ? 'active' : '' ?>" 
+               href="<?= hasRole('Admin') ? '/employeeYA/views/admin/profile.php' : '/employeeYA/views/profile.php' ?>">
                 <i class="fas fa-user"></i>
                 <span class="nav-link-text">Profile</span>
                 <span class="tooltip-text">Profile</span>

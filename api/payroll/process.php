@@ -97,6 +97,28 @@ try {
                 $data['pay_date']
             ]);
 
+            // Create notification for the employee
+            $stmt = $conn->prepare("
+                INSERT INTO notifications 
+                (user_id, title, message, type)
+                VALUES (?, ?, ?, 'payroll')
+            ");
+            
+            $title = "Payroll Processed";
+            $message = sprintf(
+                "Your payroll for the period %s to %s has been processed. Net pay: ₱%s. Payment date: %s",
+                date('M j, Y', strtotime($data['start_date'])),
+                date('M j, Y', strtotime($data['end_date'])),
+                number_format($payrollData['net_pay'], 2),
+                date('M j, Y', strtotime($data['pay_date']))
+            );
+            
+            $stmt->execute([
+                $employee['user_id'],
+                $title,
+                $message
+            ]);
+
             // Log the action
             $stmt = $conn->prepare("
                 INSERT INTO audit_logs 

@@ -7,6 +7,14 @@ require_once '../../config/pusher.php';
 $response = ['success' => false, 'error' => ''];
 
 try {
+    // Get JSON data
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
+
+    if (!isset($data['imageData'])) {
+        throw new Exception("Photo is required");
+    }
+
     // Validate employee
     $employeeId = $_SESSION['user_data']['employee_id'];
     $stmt = $conn->prepare("SELECT * FROM employees 
@@ -28,15 +36,38 @@ try {
     $currentHour = date('H');
     $status = ($currentHour >= 9 && date('i') > 30) ? 'Late' : 'Present';
 
-    // Insert record
+    // Create upload directory if it doesn't exist
+    $uploadDir = '../../uploads/attendance_photos/' . date('Y/m/');
+    if (!file_exists($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    // Generate unique filename
+    $filename = uniqid('clock_in_') . '.jpg';
+    $photoPath = 'uploads/attendance_photos/' . date('Y/m/') . $filename;
+    $fullPath = '../../' . $photoPath;
+
+    // Save the image
+    $imageData = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $data['imageData']));
+    if (!file_put_contents($fullPath, $imageData)) {
+        throw new Exception("Failed to save photo");
+    }
+
+    // Verify the file was created
+    if (!file_exists($fullPath)) {
+        throw new Exception("Failed to verify photo was saved");
+    }
+
+    // Insert record with photo path
     $stmt = $conn->prepare("INSERT INTO attendance_records 
-                          (employee_id, date, time_in, status, ip_address, device_info)
-                          VALUES (?, CURDATE(), NOW(), ?, ?, ?)");
+                          (employee_id, date, time_in, status, ip_address, device_info, photo_path)
+                          VALUES (?, CURDATE(), NOW(), ?, ?, ?, ?)");
     $stmt->execute([
         $employeeId,
         $status,
         $_SERVER['REMOTE_ADDR'],
-        $_SERVER['HTTP_USER_AGENT']
+        $_SERVER['HTTP_USER_AGENT'],
+        $photoPath
     ]);
 
     $recordId = $conn->lastInsertId();

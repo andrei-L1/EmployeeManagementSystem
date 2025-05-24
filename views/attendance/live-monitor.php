@@ -25,7 +25,8 @@ $stmt = $conn->prepare("
         ar.time_in,
         ar.time_out,
         ar.status,
-        ar.date
+        ar.date,
+        ar.photo_path
     FROM employees e
     LEFT JOIN departments d ON e.department_id = d.department_id
     LEFT JOIN positions p ON e.position_id = p.position_id
@@ -156,11 +157,13 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="card attendance-card" id="employee-<?= $employee['employee_id'] ?>">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h5 class="card-title mb-1">
-                                                <?= htmlspecialchars($employee['first_name'] . ' ' . $employee['last_name']) ?>
-                                            </h5>
-                                            <p class="text-muted mb-2"><?= htmlspecialchars($employee['position_name']) ?></p>
+                                        <div class="d-flex align-items-center mb-1">
+                                            <div>
+                                                <h5 class="card-title mb-1">
+                                                    <?= htmlspecialchars($employee['first_name'] . ' ' . $employee['last_name']) ?>
+                                                </h5>
+                                                <p class="text-muted mb-2"><?= htmlspecialchars($employee['position_name']) ?></p>
+                                            </div>
                                         </div>
                                         <span class="badge status-badge bg-<?= 
                                             $employee['status'] === 'Present' ? 'success' : 
@@ -178,6 +181,17 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <div>Out: <?= date('h:i A', strtotime($employee['time_out'])) ?></div>
                                         <?php endif; ?>
                                     </div>
+                                    <?php
+                                    $hasPhoto = $employee['photo_path'] && $employee['time_in'];
+                                    $photoPath = $hasPhoto
+                                        ? '/employeeYA/' . ltrim($employee['photo_path'], '/')
+                                        : '';
+                                    ?>
+                                    <?php if ($hasPhoto): ?>
+                                        <button class="btn btn-sm btn-primary mt-2" onclick="showPhotoModal('<?= htmlspecialchars($photoPath) ?>')">
+                                            View Photo
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -298,6 +312,30 @@ $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Initial stats update
     updateStats();
+</script>
+
+<!-- Add modal at the end of the file before </body> -->
+<div id="photoModal" class="modal fade" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Clock-in Photo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="modalPhoto" src="" alt="Clock-in Photo" class="img-fluid rounded">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showPhotoModal(photoPath) {
+    const modalPhoto = document.getElementById('modalPhoto');
+    modalPhoto.src = photoPath;
+    const modal = new bootstrap.Modal(document.getElementById('photoModal'));
+    modal.show();
+}
 </script>
 </body>
 </html> 
